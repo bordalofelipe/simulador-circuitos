@@ -36,4 +36,12 @@ jobs:
         enable-latex: false # optional
         # Extra alpine packages for the build environment
         # additional-packages: # optional, default is 
+    - name: Upload PDF Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: pdf
+        path: |
+          docs/latex/*.pdf
+          docs/html/
+          docs/html
           
