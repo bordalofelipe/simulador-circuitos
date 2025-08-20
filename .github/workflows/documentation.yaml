@@ -33,13 +33,13 @@ jobs:
         # Working directory
         working-directory: docs/ # default is .
         # Generate latex documentation
-        enable-latex: false # optional
+        enable-latex: true # optional
         # Extra alpine packages for the build environment
         # additional-packages: # optional, default is 
-    - name: Upload PDF Artifacts
+    - name: Upload Documentation Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: pdf
+        name: docs
         path: |
           docs/latex/*.pdf
           docs/html/
