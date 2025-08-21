@@ -2,6 +2,7 @@ class Componente():
     _linear = True
     _num_nos = 0
     _num_nos_mod = 0
+    passo = 0.0 # passo de tempo, definido por Circuito.run()
     def __init__(self, name: str, nos: list[str]):
         '''Classe abstrata de componente'''
         self._nos_mod = []
@@ -31,13 +32,11 @@ class Componente():
     def __str__(self):
         return 'Componente' 
 
-    def estampaDC(self, Gn, I):
+    def estampaBE(self, Gn, I, tensoes):
         raise NotImplementedError
-    def estampaBE(self, Gn, I):
+    def estampaTrap(self, Gn, I, tensoes):
         raise NotImplementedError
-    def estampaTrap(self, Gn, I):
-        raise NotImplementedError
-    def estampaFE(self, Gn, I):
+    def estampaFE(self, Gn, I, tensoes):
         raise NotImplementedError
 
 class Resistor(Componente):
@@ -56,13 +55,17 @@ class Resistor(Componente):
     def __str__(self):
         return 'R' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
     
-    def estampaDC(self, Gn, I):
-        pass
+    def estampaBE(self, Gn, I, tensoes):
+        Gn[self._posicao_nos[0], self._posicao_nos[0]] += 1/self.valor
+        Gn[self._posicao_nos[0], self._posicao_nos[1]] -= 1/self.valor
+        Gn[self._posicao_nos[1], self._posicao_nos[0]] -= 1/self.valor
+        Gn[self._posicao_nos[1], self._posicao_nos[1]] += 1/self.valor
+        return Gn, I
 
 class Indutor(Componente):
     _linear = True
     _num_nos = 2
-    _num_nos_mod = 0
+    _num_nos_mod = 1
     def __init__(self, name: str, nos: list[str], valor: float, ic=0.0):
         '''
         Indutor
@@ -80,8 +83,15 @@ class Indutor(Componente):
         else:
             return 'L' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor) + ' IC=' + str(self.ic)
     
-    def estampaDC(self, Gn, I):
-        pass
+    def estampaBE(self, Gn, I, tensoes):
+        Gn[self._posicao_nos[0], self._nos_mod[0]] = -1
+        Gn[self._posicao_nos[1], self._nos_mod[0]] = 1
+        Gn[self._nos_mod[0], self._posicao_nos[0]] = 1
+        Gn[self._nos_mod[0], self._posicao_nos[1]] = -1
+        Gn[self._nos_mod[0], self._nos_mod[0]] = (self.valor/self.passo)*self.ic
+
+        I[self._nos_mod[0]] = self.valor/self.passo
+        return Gn, I
 
 class Capacitor(Componente):
     _linear = True
@@ -104,8 +114,15 @@ class Capacitor(Componente):
         else:
             return 'C' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor) + ' IC=' + str(self.ic)
     
-    def estampaDC(self, Gn, I):
-        pass
+    def estampaBE(self, Gn, I, tensoes):
+        Gn[self._posicao_nos[0], self._posicao_nos[0]] += self.valor/self.passo
+        Gn[self._posicao_nos[0], self._posicao_nos[1]] -= self.valor/self.passo
+        Gn[self._posicao_nos[1], self._posicao_nos[0]] -= self.valor/self.passo
+        Gn[self._posicao_nos[1], self._posicao_nos[1]] += self.valor/self.passo
+
+        I[self._posicao_nos[0]] += (self.valor/self.passo)*self.ic
+        I[self._posicao_nos[1]] -= (self.valor/self.passo)*self.ic
+        return Gn, I
 
 # tensao controlada por tensao
 class FonteTensaoTensao(Componente):
@@ -124,8 +141,14 @@ class FonteTensaoTensao(Componente):
     def __str__(self):
         return 'E' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
     
-    def estampaDC(self, Gn, I):
-        pass
+    def estampaBE(self, Gn, I, tensoes):
+        Gn[self._posicao_nos[0], self._nos_mod[0]] -= 1
+        Gn[self._posicao_nos[1], self._nos_mod[0]] += 1
+        Gn[self._posicao_nos[2], self._nos_mod[0]] += self.valor
+        Gn[self._posicao_nos[3], self._nos_mod[0]] -= self.valor
+        Gn[self._nos_mod[0], self._posicao_nos[0]] += 1
+        Gn[self._nos_mod[0], self._posicao_nos[1]] -= 1
+        return Gn, I
 
 # corrente controlada por corrente
 class FonteCorrenteCorrente(Componente):
@@ -144,8 +167,8 @@ class FonteCorrenteCorrente(Componente):
     def __str__(self):
         return 'F' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
     
-    def estampaDC(self, Gn, I):
-        pass
+    def estampaBE(self, Gn, I, tensoes):
+        return Gn, I
 
 # corrente controlada por tensao
 class FonteCorrenteTensao(Componente):
@@ -164,8 +187,8 @@ class FonteCorrenteTensao(Componente):
     def __str__(self):
         return 'G' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
     
-    def estampaDC(self, Gn, I):
-        pass
+    def estampaBE(self, Gn, I, tensoes):
+        return Gn, I
 
 # tensao controlada por corrente
 class FonteTensaoCorrente(Componente):
@@ -184,8 +207,8 @@ class FonteTensaoCorrente(Componente):
     def __str__(self):
         return 'H' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
     
-    def estampaDC(self, Gn, I):
-        pass
+    def estampaBE(self, Gn, I, tensoes):
+        return Gn, I
 
 class Diodo(Componente):
     _linear = True
@@ -201,8 +224,8 @@ class Diodo(Componente):
     def __str__(self):
         return 'D' + self.name + ' ' + ' '.join(str(no) for no in self.nos)
     
-    def estampaDC(self, Gn, I):
-        pass
+    def estampaBE(self, Gn, I, tensoes):
+        return Gn, I
 
 class AmpOp(Componente):
     _linear = True
@@ -218,8 +241,8 @@ class AmpOp(Componente):
     def __str__(self):
         return 'O' + self.name + ' ' + ' '.join(str(no) for no in self.nos)
     
-    def estampaDC(self, Gn, I):
-        pass
+    def estampaBE(self, Gn, I, tensoes):
+        return Gn, I
 
 class Mosfet(Componente):
     def __init__(self):
@@ -242,8 +265,8 @@ class FonteCorrente(Componente):
     def __str__(self):
         return 'I' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + ' '.join(self.args)
     
-    def estampaDC(self, Gn, I):
-        pass
+    def estampaBE(self, Gn, I, tensoes):
+        return Gn, I
 
 class FonteTensao(Componente):
     _linear = True
@@ -261,5 +284,5 @@ class FonteTensao(Componente):
     def __str__(self):
         return 'V' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + ' '.join(self.args)
     
-    def estampaDC(self, Gn, I):
-        pass
+    def estampaBE(self, Gn, I, tensoes):
+        return Gn, I
