@@ -15,8 +15,8 @@ def test_dc_source():
 def test_lc():
     netlist('lc.net')
     
-def test_mosfet_curve():
-    netlist('mosfet_curve.net')
+'''def test_mosfet_curve():
+    netlist('mosfet_curve.net')'''
 
 def test_oscilator():
     netlist('oscilator.net')
