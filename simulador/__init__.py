@@ -40,14 +40,14 @@ class Circuito():
         return self.__delitem__(index)
 
     def __popular_nos(self):
-        self.__nos = ['0'] # garante que o no terra eh o primeiro
+        self.__nos = [GND] # garante que o no terra eh o primeiro
         hasGround = False
         for comp in self.__componentes:
             nos = comp.nos
             for no in nos:
                 if no not in self.__nos:
                     self.__nos.append(no)
-                if no == '0':
+                if no == GND:
                     hasGround = True
         if not hasGround:
             raise Exception('Circuito sem no terra')
