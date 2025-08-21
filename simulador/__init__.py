@@ -16,10 +16,6 @@ class Circuito():
         self.__componentes: list[Componente] = []
         self.__nos = []
 
-    def __iadd__(self, componente):
-        if (isinstance(componente, Componente)):
-            self.__componentes.append(componente)
-    
     def __setitem__(self, index, componente):
         if (isinstance(componente, Componente)):
             self.__componentes[index] = componente
@@ -34,7 +30,8 @@ class Circuito():
         return len(self.__componentes)
     
     def append(self, componente):
-        return self.__iadd__(componente)
+        if (isinstance(componente, Componente)):
+            self.__componentes.append(componente)
     
     def remove(self, componente):
         return self.__componentes.__delitem__(componente)
