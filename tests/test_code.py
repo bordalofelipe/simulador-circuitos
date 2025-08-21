@@ -18,16 +18,45 @@ def test_dc_source():
     c.export('tests/dc_source.net.test')
     
 def test_lc():
-    pass
-    
+    c = simulador.Circuito('.TRAN', 0.003, 3e-07, 'BE', 1)
+    c.append(simulador.Indutor('3001', ['1', '0'], 0.001))
+    c.append(simulador.Indutor('3002', ['2', '0'], 0.00025))
+    c.append(simulador.Indutor('3003', ['3', '0'], 0.00011111111110000001))
+    c.append(simulador.Capacitor('2002', ['1', '0'], 1e-06, ic=1))
+    c.append(simulador.Capacitor('2003', ['2', '0'], 1e-06, ic=1))
+    c.append(simulador.Capacitor('2004', ['3', '0'], 1e-06, ic=1))
+    c.append(simulador.FonteTensaoTensao('7000', ['4', '0', '3', '0'], 1))
+    c.append(simulador.FonteTensaoTensao('7001', ['5', '4', '2', '0'], 1))
+    c.append(simulador.FonteTensaoTensao('7002', ['6', '5', '1', '0'], 1))
+    c.export('tests/lc.net.test')
+
 def test_mosfet_curve():
     pass
 
 def test_oscilator():
-    pass
-    
+    c = simulador.Circuito('.TRAN', 0.05, 1e-06, 'BE', 1)
+    c.append(simulador.Resistor('1012', ['1', '2'], 51000.0))
+    c.append(simulador.Capacitor('2007', ['2', '3'], 1e-09))
+    c.append(simulador.Resistor('1013', ['3', '0'], 51000.0))
+    c.append(simulador.Capacitor('2008', ['3', '0'], 1e-09))
+    c.append(simulador.AmpOp('9903', ['3','4','1']))
+    c.append(simulador.Resistor('1014', ['4', '0'], 47000.0))
+    c.append(simulador.Resistor('1015', ['1', '4'], 100000.0))
+    c.append(simulador.Resistor('1016', ['1', '5'], 1000000.0))
+    c.append(simulador.Diodo('1203', ['5', '4']))
+    c.append(simulador.Diodo('1204', ['4', '5']))
+    c.export('tests/oscilator.net.test')
+
 def test_pulse():
-    pass
+    c = simulador.Circuito('.TRAN', 0.01, 1e-05, 'BE', 1)
+    c.append(simulador.FonteTensao('5003', ['1', '0'], ['PULSE', '0', '5', '0.002', '0.0002', '0.0002', '0.0005', '0.001', '10']))
+    c.append(simulador.Resistor('1002', ['1', '2'], 1000.0))
+    c.append(simulador.Resistor('1003', ['2', '0'], 1000.0))
+    c.export('tests/pulse.net.test')
     
 def test_sinusoidal():
-    pass
+    c = simulador.Circuito('.TRAN', 0.005, 1e-05, 'BE', 1)
+    c.append(simulador.FonteTensao('4000', ['1', '0'], ['SIN', '1', '5', '1000', '0.002', '80', '90', '5']))
+    c.append(simulador.Resistor('1000', ['1', '2'], 1000.0))
+    c.append(simulador.Resistor('1001', ['2', '0'], 1000.0))
+    c.export('tests/sinusoidal.net.test')
