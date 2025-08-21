@@ -1,6 +1,12 @@
 import pytest
 import simulador
 
+def check_netlist(filename):
+    ref = open(filename)
+    test = open(filename + '.test')
+    for line1, line2 in zip(ref, test):
+        assert line1.strip() == line2.strip()
+
 def test_chua():
     c = simulador.Circuito('.TRAN', 1000, 0.1, 'BE', 1)
     c.append(simulador.Resistor('1004', ['1', '2'], 1.9))
@@ -8,6 +14,7 @@ def test_chua():
     c.append(simulador.Capacitor('2000', ['2', '0'], 0.31, ic=1))
     c.append(simulador.Capacitor('2001', ['1', '0'], 1, ic=1))
     c.export('tests/chua.net.test')
+    check_netlist('tests/chua.net')
 
 def test_dc_source():
     c = simulador.Circuito('.TRAN', 0.1, 1e-05, 'BE', 1)
@@ -16,6 +23,7 @@ def test_dc_source():
     c.append(simulador.Resistor('1005', ['2', '0'], 1000.0))
     c.append(simulador.Capacitor('2005', ['2', '0'], 4.9999999999999996e-05))
     c.export('tests/dc_source.net.test')
+    check_netlist('tests/dc_source.net')
     
 def test_lc():
     c = simulador.Circuito('.TRAN', 0.003, 3e-07, 'BE', 1)
@@ -29,6 +37,7 @@ def test_lc():
     c.append(simulador.FonteTensaoTensao('7001', ['5', '4', '2', '0'], 1))
     c.append(simulador.FonteTensaoTensao('7002', ['6', '5', '1', '0'], 1))
     c.export('tests/lc.net.test')
+    check_netlist('tests/lc.net')
 
 def test_mosfet_curve():
     pass
@@ -46,6 +55,7 @@ def test_oscilator():
     c.append(simulador.Diodo('1203', ['5', '4']))
     c.append(simulador.Diodo('1204', ['4', '5']))
     c.export('tests/oscilator.net.test')
+    check_netlist('tests/oscilator.net')
 
 def test_pulse():
     c = simulador.Circuito('.TRAN', 0.01, 1e-05, 'BE', 1)
@@ -53,6 +63,7 @@ def test_pulse():
     c.append(simulador.Resistor('1002', ['1', '2'], 1000.0))
     c.append(simulador.Resistor('1003', ['2', '0'], 1000.0))
     c.export('tests/pulse.net.test')
+    check_netlist('tests/pulse.net')
     
 def test_sinusoidal():
     c = simulador.Circuito('.TRAN', 0.005, 1e-05, 'BE', 1)
@@ -60,3 +71,4 @@ def test_sinusoidal():
     c.append(simulador.Resistor('1000', ['1', '2'], 1000.0))
     c.append(simulador.Resistor('1001', ['2', '0'], 1000.0))
     c.export('tests/sinusoidal.net.test')
+    check_netlist('tests/sinusoidal.net')
