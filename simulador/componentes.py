@@ -76,9 +76,9 @@ class Indutor(Componente):
 
     def __str__(self):
         if self.ic == 0.0:
-            return 'I' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
+            return 'L' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
         else:
-            return 'I' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor) + ' IC=' + str(self.ic)
+            return 'L' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor) + ' IC=' + str(self.ic)
     
     def estampaDC(self, Gn, I):
         pass
