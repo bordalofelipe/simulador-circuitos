@@ -136,11 +136,30 @@ class Resultado():
         self.__nos = nos
         self.__t = t
         self.__resultado = resultado
+
+    def __setitem__(self, index, resultado):
+        assert len(resultado) == len(self.__nos)
+        self.__resultado[index] = resultado
+
+    def __getitem__(self, index):
+        return self.__resultado[index]
+    
+    def __delitem__(self, index):
+        return self.__resultado.pop(index)
+    
+    def __len__(self):
+        return len(self.__resultado)
     
     def append(self, t: float, resultado: list[float]):
         assert len(resultado) == len(self.__nos)
         self.__t.append(t)
         self.__resultado.append(resultado)
+
+    def remove(self, resultado):
+        return self.__resultado.__delitem__(resultado)
+    
+    def pop(self, index):
+        return self.__delitem__(index)
     
     def export(self, filename: str):
         with open(filename, 'w') as f:
