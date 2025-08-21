@@ -76,9 +76,9 @@ class Indutor(Componente):
 
     def __str__(self):
         if self.ic == 0.0:
-            return 'I' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
+            return 'L' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
         else:
-            return 'I' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor) + ' IC=' + str(self.ic)
+            return 'L' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor) + ' IC=' + str(self.ic)
     
     def estampaDC(self, Gn, I):
         pass
@@ -122,7 +122,7 @@ class FonteTensaoTensao(Componente):
         self.valor = valor
     
     def __str__(self):
-        return 'F' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
+        return 'E' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
     
     def estampaDC(self, Gn, I):
         pass
@@ -142,7 +142,7 @@ class FonteCorrenteCorrente(Componente):
         self.valor = valor
     
     def __str__(self):
-        return 'G' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
+        return 'F' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
     
     def estampaDC(self, Gn, I):
         pass
