@@ -54,6 +54,17 @@ class Circuito():
 
     def run(self):
         self.__popular_nos()
+        print('Circuito com ' + str(self.__nos) + ' nos')
+        for com in self.__componentes: # aloca cada no para cada componente
+            comp_nos = com.nos
+            com.set_posicao_nos([self.__nos.index(item) for item in comp_nos])
+            ## Analise modificada
+            print(str(com) + ' precisa de ' + str(com.num_nos_mod) + ' nos extras. Alocando nos: ', end=' ')
+            com.set_nos_mod([len(self.__nos) + i for i in range(com.num_nos_mod)]) # informa indices
+            print(com._nos_mod)
+            for i in range(com.num_nos_mod): # adiciona nos modificados na lista de todos os nos
+                self.__nos.append('mod' + str(len(self.__nos)))
+        print('Circuito final com ' + str(len(self.__nos)) + ' nos')
         r = Resultado(self.__nos, [], [])
         for i in range(10000):
             r.append(i, [1]*len(self.__nos))
