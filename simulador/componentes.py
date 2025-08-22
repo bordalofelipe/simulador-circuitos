@@ -1,10 +1,20 @@
 class Componente():
+    '''!
+    @class Componente
+    @brief Classe abstrata de componente
+    Esta classe é herdada por componentes específicos (ex: Resistor, Capacitor, etc.), que implementam, principalmente, suas respectivas estampas
+    '''
     _linear = True
     _num_nos = 0
     _num_nos_mod = 0
     passo = 0.0 # passo de tempo, definido por Circuito.run()
     def __init__(self, name: str, nos: list[str]):
-        '''Classe abstrata de componente'''
+        '''!
+        @fn __init__(self, name: str, nos: list[str])
+        @brief Construtor da classe
+        @param name nome do componente
+        @param nos lista de nos do componente
+        '''
         self._nos_mod = []
         assert len(nos) == self._num_nos
         self.name = name
@@ -12,24 +22,40 @@ class Componente():
 
     @property
     def linear(self):
-        '''Retorna se componente é linear'''
+        '''!
+        @brief Retorna se componente é linear
+        '''
         return self._linear
 
     @property
     def num_nos_mod(self):
-        '''Retorna numero de nos necessarios na analise modificada'''
+        '''!
+        @brief Retorna numero de nos necessarios na analise modificada
+        '''
         return self._num_nos_mod
     
     def set_nos_mod(self, nos_mod: list[int]):
-        '''Aloca nos necessarios na analise modificada'''
+        '''!
+        @fn set_nos_mod(self, nos_mod: list[int])
+        @brief Aloca nos necessarios na analise modificada
+        @param nos_mod lista dos nos para analise modificada (posicoes nas matrizes Gn e In)
+        '''
         assert len(nos_mod) == self._num_nos_mod
         self._nos_mod = nos_mod
     
     def set_posicao_nos(self, posicoes: list[int]):
-        '''Aloca nos necessarios'''
+        '''!
+        @fn set_posicos_nos(self, posicoes: list[int])
+        @brief Aloca nos necessarios
+        @param posicoes lista das posicoes nas matrizes Gn e In dos nos deste componente
+        '''
         self._posicao_nos = posicoes
     
     def __str__(self):
+        '''!
+        @fn __str__(self)
+        @brief Retorna representação do objeto como linha da netlist
+        '''
         return 'Componente' 
 
     def estampaBE(self, Gn, I, tensoes):
