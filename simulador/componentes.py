@@ -1,6 +1,5 @@
 class Componente():
     '''!
-    @class Componente
     @brief Classe abstrata de componente
     Esta classe é herdada por componentes específicos (ex: Resistor, Capacitor, etc.), que implementam, principalmente, suas respectivas estampas
     '''
@@ -10,7 +9,6 @@ class Componente():
     passo = 0.0 # passo de tempo, definido por Circuito.run()
     def __init__(self, name: str, nos: list[str]):
         '''!
-        @fn __init__(self, name: str, nos: list[str])
         @brief Construtor da classe
         @param name nome do componente
         @param nos lista de nos do componente
@@ -36,7 +34,6 @@ class Componente():
 
     def set_nos_mod(self, nos_mod: list[int]):
         '''!
-        @fn set_nos_mod(self, nos_mod: list[int])
         @brief Aloca nos necessarios na analise modificada
         @param nos_mod lista dos nos para analise modificada (posicoes nas matrizes Gn e In)
         '''
@@ -45,7 +42,6 @@ class Componente():
 
     def set_posicao_nos(self, posicoes: list[int]):
         '''!
-        @fn set_posicos_nos(self, posicoes: list[int])
         @brief Aloca nos necessarios
         @param posicoes lista das posicoes nas matrizes Gn e In dos nos deste componente
         '''
@@ -53,7 +49,6 @@ class Componente():
 
     def __str__(self):
         '''!
-        @fn __str__(self)
         @brief Retorna representação do objeto como linha da netlist
         '''
         return 'Componente' 
@@ -66,14 +61,17 @@ class Componente():
         raise NotImplementedError
 
 class Resistor(Componente):
+    '''!
+    @brief Esta classe implementa o Resistor e sua estampa
+    '''
     _linear = True
     _num_nos = 2
     _num_nos_mod = 0
     def __init__(self, name: str, nos: list[str], valor: float):
-        '''
-        Resistor
-        nos: [no1, no2] nos do Resistor
-        valor: resistencia
+        '''!
+        @brief Construtor do Resistor
+        @param nos [no1, no2] nos do Resistor
+        @param valor resistencia
         '''
         super().__init__(name, nos)
         self.valor = valor
@@ -89,15 +87,18 @@ class Resistor(Componente):
         return Gn, I
 
 class Indutor(Componente):
+    '''!
+    @brief Esta classe implementa o Indutor e sua estampa
+    '''
     _linear = True
     _num_nos = 2
     _num_nos_mod = 1
     def __init__(self, name: str, nos: list[str], valor: float, ic=0.0):
-        '''
-        Indutor
-        nos: [no_mais, no_menos] nos do Indutor
-        valor: indutancia
-        ic = 0.0: valor inicial
+        '''!
+        @brief construtor do Indutor
+        @param nos [no_mais, no_menos] nos do Indutor
+        @param valor indutancia
+        @param ic = 0.0 valor inicial
         '''
         super().__init__(name, nos)
         self.valor = valor
@@ -120,15 +121,18 @@ class Indutor(Componente):
         return Gn, I
 
 class Capacitor(Componente):
+    '''!
+    @brief Esta classe implementa o Capacitor e sua estampa
+    '''
     _linear = True
     _num_nos = 2
     _num_nos_mod = 0
     def __init__(self, name: str, nos: list[str], valor: float, ic=0.0):
-        '''
-        Capacitor
-        nos: [no_mais, no_menos] nos do Capacitor
-        valor: capacitancia
-        ic = 0.0: valor inicial
+        '''!
+        @brief construtor do Capacitor
+        @param nos [no_mais, no_menos] nos do Capacitor
+        @param valor capacitancia
+        @param ic = 0.0 valor inicial
         '''
         super().__init__(name, nos)
         self.valor = valor
@@ -151,14 +155,17 @@ class Capacitor(Componente):
         return Gn, I
 
 class ResistorNaoLinear(Componente):
+    '''!
+    @brief Esta classe implementa o Resistor Nao Linear com 3 segmentos e sua estampa
+    '''
     _linear = False
     _num_nos = 2
     _num_nos_mod = 0
     def __init__(self, name: str, nos: list[str], v1: float, i1: float, v2: float, i2: float, v3: float, i3: float, v4: float, i4: float):
-        '''
-        Resistor Nao Linear
-        nos: [no_mais, no_menos] nos do Resistor Nao Linear
-        pares Vi, Ii: pontos da curva tensão vs corrente
+        '''!
+        @brief construtor do Resistor Nao Linear
+        Os pares Vi, Ii sao pontos da curva tensão vs corrente
+        @param nos [no_mais, no_menos] nos do Resistor Nao Linear
         '''
         super().__init__(name, nos)
         self.v1 = v1
@@ -178,14 +185,17 @@ class ResistorNaoLinear(Componente):
 
 # tensao controlada por tensao
 class FonteTensaoTensao(Componente):
+    '''!
+    @brief Esta classe implementa a Fonte de tensao controlada por tensao e sua estampa
+    '''
     _linear = True
     _num_nos = 4
     _num_nos_mod = 1
     def __init__(self, name: str, nos: list[str], valor: float):
-        '''
-        Fonte de tensao controlada por tensao
-        nos: [no_mais, no_menos] nos da fonte
-        valor: ganho
+        '''!
+        @brief Construtor da Fonte de tensao controlada por tensao
+        @param nos [no_mais, no_menos] nos da fonte
+        @param valor ganho
         '''
         super().__init__(name, nos)
         self.valor = valor
@@ -204,14 +214,17 @@ class FonteTensaoTensao(Componente):
 
 # corrente controlada por corrente
 class FonteCorrenteCorrente(Componente):
+    '''!
+    @brief Esta classe implementa a Fonte de corrente controlada por corrente e sua estampa
+    '''
     _linear = True
     _num_nos = 4
     _num_nos_mod = 1
     def __init__(self, name: str, nos: list[str], valor: float):
-        '''
-        Fonte de corrente controlada por corrente
-        nos: [no_mais, no_menos] nos da fonte
-        valor: ganho
+        '''!
+        @brief Construtor da Fonte de corrente controlada por corrente
+        @param nos [no_mais, no_menos] nos da fonte
+        @param valor ganho
         '''
         super().__init__(name, nos)
         self.valor = valor
@@ -224,14 +237,17 @@ class FonteCorrenteCorrente(Componente):
 
 # corrente controlada por tensao
 class FonteCorrenteTensao(Componente):
+    '''!
+    @brief Esta classe implementa a Fonte de corrente controlada por tensao e sua estampa
+    '''
     _linear = True
     _num_nos = 4
     _num_nos_mod = 0
     def __init__(self, name: str, nos: list[str], valor: float):
-        '''
-        Fonte de corrente controlada por tensao
-        nos: [no_mais, no_menos] nos da fonte
-        valor: ganho
+        '''!
+        @brief Construtor da Fonte de corrente controlada por tensao
+        @param nos [no_mais, no_menos] nos da fonte
+        @param valor ganho
         '''
         super().__init__(name, nos)
         self.valor = valor
@@ -244,14 +260,17 @@ class FonteCorrenteTensao(Componente):
 
 # tensao controlada por corrente
 class FonteTensaoCorrente(Componente):
+    '''!
+    @brief Esta classe implementa a Fonte de tensao controlada por corrente e sua estampa
+    '''
     _linear = True
     _num_nos = 4
     _num_nos_mod = 2
     def __init__(self, name: str, nos: list[str], valor: float):
-        '''
-        Fonte de tensao controlada por corrente
-        nos: [no_mais, no_menos] nos da fonte
-        valor: ganho
+        '''!
+        @brief Construtor da Fonte de tensao controlada por corrente
+        @param nos [no_mais, no_menos] nos da fonte
+        @param valor ganho
         '''
         super().__init__(name, nos)
         self.valor = valor
@@ -263,13 +282,16 @@ class FonteTensaoCorrente(Componente):
         return Gn, I
 
 class Diodo(Componente):
+    '''!
+    @brief Esta classe implementa o Diodo e sua estampa
+    '''
     _linear = True
     _num_nos = 2
     _num_nos_mod = 2
     def __init__(self, name: str, nos: list[str]):
-        '''
-        Diodo
-        nos: [no_mais, no_menos] nos do diodo
+        '''!
+        @brief Construtor do Diodo
+        @param nos [no_mais, no_menos] nos do diodo
         '''
         super().__init__(name, nos)
 
@@ -280,13 +302,16 @@ class Diodo(Componente):
         return Gn, I
 
 class AmpOp(Componente):
+    '''!
+    @brief Esta classe implementa o Amplificador Operacional ideal e sua estampa
+    '''
     _linear = True
     _num_nos = 3
     _num_nos_mod = 1
     def __init__(self, name: str, nos: list[str]):
-        '''
-        Amplificador Operacional
-        nos: [no_mais, no_menos, no_saida] nos do amp op
+        '''!
+        @brief Construtor do Amplificador Operacional
+        @param nos [no_mais, no_menos, no_saida] nos do amp op
         '''
         super().__init__(name, nos)
 
@@ -297,19 +322,27 @@ class AmpOp(Componente):
         return Gn, I
 
 class Mosfet(Componente):
+    '''!
+    @brief Esta classe implementa o transistor MOSFET e sua estampa
+    '''
     def __init__(self):
-        '''Mosfet'''
+        '''!
+        @brief Construtor do Mosfet
+        '''
         raise NotImplementedError
 
 class FonteCorrente(Componente):
+    '''!
+    @brief Esta classe implementa a Fonte de corrente e sua estampa
+    '''
     _linear = True
     _num_nos = 2
     _num_nos_mod = 0
     def __init__(self, name: str, nos: list[str], args: list):
-        '''
-        Fonte de corrente
-        nos: [no_mais, no_menos] nos da fonte
-        list: parametros no estilo SPICE
+        '''!
+        @brief Construtor Fonte de corrente
+        @param nos [no_mais, no_menos] nos da fonte
+        @param args parametros no estilo SPICE
         '''
         super().__init__(name, nos)
         self.args = args
@@ -321,14 +354,17 @@ class FonteCorrente(Componente):
         return Gn, I
 
 class FonteTensao(Componente):
+    '''!
+    @brief Esta classe implementa a Fonte de tensao e sua estampa
+    '''
     _linear = True
     _num_nos = 2
     _num_nos_mod = 1
     def __init__(self, name: str, nos: list[str], args: list):
-        '''
-        Fonte de tensao
-        nos: [no_mais, no_menos] nos da fonte
-        list: parametros no estilo SPICE
+        '''!
+        @brief Construtor da Fonte de tensao
+        @param nos [no_mais, no_menos] nos da fonte
+        @param args parametros no estilo SPICE
         '''
         super().__init__(name, nos)
         self.args = args
