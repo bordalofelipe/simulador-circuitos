@@ -13,6 +13,7 @@ def test_chua():
     c.append(simulador.Indutor('3000', ['1', '0'], 1))
     c.append(simulador.Capacitor('2000', ['2', '0'], 0.31, ic=1))
     c.append(simulador.Capacitor('2001', ['1', '0'], 1, ic=1))
+    c.append(simulador.ResistorNaoLinear('9900', ['2', '0'], -2, 1.1, -1, 0.7, 1, -0.7, 2, -1.1))
     c.export('tests/chua.net.test')
     check_netlist('tests/chua.net')
 
