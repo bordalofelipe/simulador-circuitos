@@ -22,20 +22,20 @@ class Circuito():
 
     def __getitem__(self, index):
         return self.__componentes[index]
-    
+
     def __delitem__(self, index):
         return self.__componentes.pop(index)
-    
+
     def __len__(self):
         return len(self.__componentes)
-    
+
     def append(self, componente):
         if (isinstance(componente, Componente)):
             self.__componentes.append(componente)
-    
+
     def remove(self, componente):
         return self.__componentes.__delitem__(componente)
-    
+
     def pop(self, index):
         return self.__delitem__(index)
 
@@ -55,21 +55,24 @@ class Circuito():
     def run(self):
         self.__popular_nos()
         print('Circuito com ' + str(self.__nos) + ' nos')
+        nao_linear = False
         for com in self.__componentes: # aloca cada no para cada componente
-            comp_nos = com.nos
-            com.set_posicao_nos([self.__nos.index(item) for item in comp_nos])
+            if not com.linear:
+                nao_linear = True
+            com.set_posicao_nos([self.__nos.index(item) for item in com.nos])
             ## Analise modificada
             print(str(com) + ' precisa de ' + str(com.num_nos_mod) + ' nos extras. Alocando nos: ', end=' ')
             com.set_nos_mod([len(self.__nos) + i for i in range(com.num_nos_mod)]) # informa indices
             print(com._nos_mod)
             for i in range(com.num_nos_mod): # adiciona nos modificados na lista de todos os nos
-                self.__nos.append('mod' + str(len(self.__nos)))
+                #self.__nos.append('mod' + str(len(self.__nos)))
+                self.__nos.append('J' + str(len(self.__nos)) + str(com).split(' ')[0]) # sintaxe moreirao
         print('Circuito final com ' + str(len(self.__nos)) + ' nos')
-        r = Resultado(self.__nos, [], [])
-        for i in range(10000):
-            r.append(i, [1]*len(self.__nos))
-        return r
-    
+        if nao_linear:
+            print('Analise nao linear necessaria')
+        resultado = Resultado(self.__nos, [], []) # pula o no terra
+        return resultado
+
     def export(self, filename: str):
         with open(filename, 'w') as f:
             self.__popular_nos()
@@ -101,6 +104,8 @@ def import_netlist(filename: str):
                     componentes.append(Capacitor(c[0][1:], [c[1], c[2]], float(c[3]), float(ic)))
                 else:
                     componentes.append(Capacitor(c[0][1:], [c[1], c[2]], float(c[3])))
+            elif tipo == 'N':
+                componentes.append(ResistorNaoLinear(c[0][1:], [c[1], c[2]], float(c[3]), float(c[4]), float(c[5]), float(c[6]), float(c[6]), float(c[7]), float(c[8]), float(c[9])))
             elif tipo == 'E':
                 componentes.append(FonteTensaoTensao(c[0][1:], [c[1], c[2], c[3], c[4]], float(c[5])))
             elif tipo == 'F':
@@ -143,13 +148,13 @@ class Resultado():
 
     def __getitem__(self, index):
         return self.__resultado[index]
-    
+
     def __delitem__(self, index):
         return self.__resultado.pop(index)
-    
+
     def __len__(self):
         return len(self.__resultado)
-    
+
     def append(self, t: float, resultado: list[float]):
         assert len(resultado) == len(self.__nos)
         self.__t.append(t)
@@ -157,10 +162,10 @@ class Resultado():
 
     def remove(self, resultado):
         return self.__resultado.__delitem__(resultado)
-    
+
     def pop(self, index):
         return self.__delitem__(index)
-    
+
     def export(self, filename: str):
         with open(filename, 'w') as f:
             f.write('t ')
@@ -171,13 +176,13 @@ class Resultado():
                 f.write(' '.join(str(i) for i in r))
                 f.write('\n')
         return self.__resultado
-    
+
     def to_numpy(self):
         return False
 
     def to_pandas(self):
         return False
-    
+
 def import_resultado(filename: str):
     with open(filename) as f:
         line = f.readline()
@@ -197,6 +202,3 @@ if __name__ == '__main__':
     c = import_netlist('entrada.txt')
     resultado = c.run()
     resultado.export('saida.txt')
-else:
-    # nao faz nada
-    pass

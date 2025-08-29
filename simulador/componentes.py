@@ -33,7 +33,7 @@ class Componente():
         @brief Retorna numero de nos necessarios na analise modificada
         '''
         return self._num_nos_mod
-    
+
     def set_nos_mod(self, nos_mod: list[int]):
         '''!
         @fn set_nos_mod(self, nos_mod: list[int])
@@ -42,7 +42,7 @@ class Componente():
         '''
         assert len(nos_mod) == self._num_nos_mod
         self._nos_mod = nos_mod
-    
+
     def set_posicao_nos(self, posicoes: list[int]):
         '''!
         @fn set_posicos_nos(self, posicoes: list[int])
@@ -50,7 +50,7 @@ class Componente():
         @param posicoes lista das posicoes nas matrizes Gn e In dos nos deste componente
         '''
         self._posicao_nos = posicoes
-    
+
     def __str__(self):
         '''!
         @fn __str__(self)
@@ -77,10 +77,10 @@ class Resistor(Componente):
         '''
         super().__init__(name, nos)
         self.valor = valor
-    
+
     def __str__(self):
         return 'R' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
-    
+
     def estampaBE(self, Gn, I, tensoes):
         Gn[self._posicao_nos[0], self._posicao_nos[0]] += 1/self.valor
         Gn[self._posicao_nos[0], self._posicao_nos[1]] -= 1/self.valor
@@ -108,7 +108,7 @@ class Indutor(Componente):
             return 'L' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
         else:
             return 'L' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor) + ' IC=' + str(self.ic)
-    
+
     def estampaBE(self, Gn, I, tensoes):
         Gn[self._posicao_nos[0], self._nos_mod[0]] = -1
         Gn[self._posicao_nos[1], self._nos_mod[0]] = 1
@@ -139,7 +139,7 @@ class Capacitor(Componente):
             return 'C' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
         else:
             return 'C' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor) + ' IC=' + str(self.ic)
-    
+
     def estampaBE(self, Gn, I, tensoes):
         Gn[self._posicao_nos[0], self._posicao_nos[0]] += self.valor/self.passo
         Gn[self._posicao_nos[0], self._posicao_nos[1]] -= self.valor/self.passo
@@ -148,6 +148,32 @@ class Capacitor(Componente):
 
         I[self._posicao_nos[0]] += (self.valor/self.passo)*self.ic
         I[self._posicao_nos[1]] -= (self.valor/self.passo)*self.ic
+        return Gn, I
+
+class ResistorNaoLinear(Componente):
+    _linear = False
+    _num_nos = 2
+    _num_nos_mod = 0
+    def __init__(self, name: str, nos: list[str], v1: float, i1: float, v2: float, i2: float, v3: float, i3: float, v4: float, i4: float):
+        '''
+        Resistor Nao Linear
+        nos: [no_mais, no_menos] nos do Resistor Nao Linear
+        pares Vi, Ii: pontos da curva tensão vs corrente
+        '''
+        super().__init__(name, nos)
+        self.v1 = v1
+        self.i1 = i1
+        self.v2 = v2
+        self.i2 = i2
+        self.v3 = v3
+        self.i3 = i3
+        self.v4 = v4
+        self.i4 = i4
+
+    def __str__(self):
+        return 'N' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.v1) + ' ' + str(self.i1) + ' ' + str(self.v2) + ' ' + str(self.i2) + ' ' + str(self.v3) + ' ' + str(self.i3) + ' ' + str(self.v4) + ' ' + str(self.i4)
+
+    def estampaBE(self, Gn, I, tensoes):
         return Gn, I
 
 # tensao controlada por tensao
@@ -163,10 +189,10 @@ class FonteTensaoTensao(Componente):
         '''
         super().__init__(name, nos)
         self.valor = valor
-    
+
     def __str__(self):
         return 'E' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
-    
+
     def estampaBE(self, Gn, I, tensoes):
         Gn[self._posicao_nos[0], self._nos_mod[0]] -= 1
         Gn[self._posicao_nos[1], self._nos_mod[0]] += 1
@@ -189,10 +215,10 @@ class FonteCorrenteCorrente(Componente):
         '''
         super().__init__(name, nos)
         self.valor = valor
-    
+
     def __str__(self):
         return 'F' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
-    
+
     def estampaBE(self, Gn, I, tensoes):
         return Gn, I
 
@@ -209,10 +235,10 @@ class FonteCorrenteTensao(Componente):
         '''
         super().__init__(name, nos)
         self.valor = valor
-    
+
     def __str__(self):
         return 'G' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
-    
+
     def estampaBE(self, Gn, I, tensoes):
         return Gn, I
 
@@ -229,10 +255,10 @@ class FonteTensaoCorrente(Componente):
         '''
         super().__init__(name, nos)
         self.valor = valor
-    
+
     def __str__(self):
         return 'H' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
-    
+
     def estampaBE(self, Gn, I, tensoes):
         return Gn, I
 
@@ -249,7 +275,7 @@ class Diodo(Componente):
 
     def __str__(self):
         return 'D' + self.name + ' ' + ' '.join(str(no) for no in self.nos)
-    
+
     def estampaBE(self, Gn, I, tensoes):
         return Gn, I
 
@@ -263,10 +289,10 @@ class AmpOp(Componente):
         nos: [no_mais, no_menos, no_saida] nos do amp op
         '''
         super().__init__(name, nos)
-        
+
     def __str__(self):
         return 'O' + self.name + ' ' + ' '.join(str(no) for no in self.nos)
-    
+
     def estampaBE(self, Gn, I, tensoes):
         return Gn, I
 
@@ -287,10 +313,10 @@ class FonteCorrente(Componente):
         '''
         super().__init__(name, nos)
         self.args = args
-    
+
     def __str__(self):
         return 'I' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + ' '.join(self.args)
-    
+
     def estampaBE(self, Gn, I, tensoes):
         return Gn, I
 
@@ -306,9 +332,9 @@ class FonteTensao(Componente):
         '''
         super().__init__(name, nos)
         self.args = args
-        
+
     def __str__(self):
         return 'V' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + ' '.join(self.args)
-    
+
     def estampaBE(self, Gn, I, tensoes):
         return Gn, I
