@@ -29,12 +29,15 @@ class Circuito():
     def __len__(self):
         return len(self.__componentes)
 
+    def __iter__(self):
+        return iter(self.__componentes)
+
     def append(self, componente):
         if (isinstance(componente, Componente)):
             self.__componentes.append(componente)
 
     def remove(self, componente):
-        return self.__componentes.__delitem__(componente)
+        return self.__componentes.remove(componente)
 
     def pop(self, index):
         return self.__delitem__(index)
@@ -142,26 +145,34 @@ class Resultado():
         self.__t = t
         self.__resultado = resultado
 
-    def __setitem__(self, index, resultado):
+    def __setitem__(self, index, tuple):
+        assert len(tuple) == 2
+        t = tuple[0]
+        resultado = tuple[1]
         assert len(resultado) == len(self.__nos)
+        self.__t[index] = t
         self.__resultado[index] = resultado
 
     def __getitem__(self, index):
-        return self.__resultado[index]
+        return self.__t[index], self.__resultado[index]
 
     def __delitem__(self, index):
-        return self.__resultado.pop(index)
+        return self.__t.pop(index), self.__resultado.pop(index)
 
     def __len__(self):
         return len(self.__resultado)
+
+    def __iter__(self):
+        return iter(zip(self.__t, self.__resultado))
 
     def append(self, t: float, resultado: list[float]):
         assert len(resultado) == len(self.__nos)
         self.__t.append(t)
         self.__resultado.append(resultado)
 
-    def remove(self, resultado):
-        return self.__resultado.__delitem__(resultado)
+    def remove(self, t):
+        index = self.__t.index(t)
+        return self.__delitem__(index)
 
     def pop(self, index):
         return self.__delitem__(index)
