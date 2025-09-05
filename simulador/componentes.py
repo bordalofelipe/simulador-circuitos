@@ -1,6 +1,5 @@
 class Componente():
     '''!
-    @class Componente
     @brief Classe abstrata base para todos os componentes de circuito
     @details Esta classe define a interface comum para todos os componentes de circuito elétrico.
     Ela implementa o padrão de projeto Template Method, onde cada componente específico
@@ -127,7 +126,6 @@ class Componente():
 
 class Resistor(Componente):
     '''!
-    @class Resistor
     @brief Representa um resistor linear no circuito
     @details O resistor é um componente linear que obedece à lei de Ohm: V = R*I.
     Sua estampa na análise nodal é bem definida e não depende do método de integração.
@@ -182,7 +180,6 @@ class Resistor(Componente):
 
 class Indutor(Componente):
     '''!
-    @class Indutor
     @brief Representa um indutor no circuito
     @details O indutor é um componente linear que armazena energia no campo magnético.
     Sua corrente e tensão estão relacionadas por: V = L * dI/dt.
@@ -252,7 +249,6 @@ class Indutor(Componente):
 
 class Capacitor(Componente):
     '''!
-    @class Capacitor
     @brief Representa um capacitor no circuito
     @details O capacitor é um componente linear que armazena energia no campo elétrico.
     Sua corrente e tensão estão relacionadas por: I = C * dV/dt.
@@ -320,7 +316,6 @@ class Capacitor(Componente):
 
 class ResistorNaoLinear(Componente):
     '''!
-    @class ResistorNaoLinear
     @brief Representa um resistor não linear com característica de 3 segmentos
     @details O resistor não linear é modelado por uma curva tensão-corrente definida
     por 4 pontos (V1,I1), (V2,I2), (V3,I3), (V4,I4), formando 3 segmentos lineares.
@@ -385,7 +380,6 @@ class ResistorNaoLinear(Componente):
 # tensao controlada por tensao
 class FonteTensaoTensao(Componente):
     '''!
-    @class FonteTensaoTensao
     @brief Representa uma fonte de tensão controlada por tensão (VCVS)
     @details A fonte de tensão controlada por tensão é um componente linear que
     gera uma tensão de saída proporcional à tensão de entrada. A relação é:
