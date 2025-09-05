@@ -455,14 +455,17 @@ class FonteTensaoTensao(Componente):
 
 # corrente controlada por corrente
 class FonteCorrenteCorrente(Componente):
+    '''!
+    @brief Esta classe implementa a Fonte de corrente controlada por corrente e sua estampa
+    '''
     _linear = True
     _num_nos = 4
     _num_nos_mod = 1
     def __init__(self, name: str, nos: list[str], valor: float):
-        '''
-        Fonte de corrente controlada por corrente
-        nos: [no_mais, no_menos] nos da fonte
-        valor: ganho
+        '''!
+        @brief Construtor da Fonte de corrente controlada por corrente
+        @param nos [no_mais, no_menos] nos da fonte
+        @param valor ganho
         '''
         super().__init__(name, nos)
         self.valor = valor
@@ -475,14 +478,17 @@ class FonteCorrenteCorrente(Componente):
 
 # corrente controlada por tensao
 class FonteCorrenteTensao(Componente):
+    '''!
+    @brief Esta classe implementa a Fonte de corrente controlada por tensao e sua estampa
+    '''
     _linear = True
     _num_nos = 4
     _num_nos_mod = 0
     def __init__(self, name: str, nos: list[str], valor: float):
-        '''
-        Fonte de corrente controlada por tensao
-        nos: [no_mais, no_menos] nos da fonte
-        valor: ganho
+        '''!
+        @brief Construtor da Fonte de corrente controlada por tensao
+        @param nos [no_mais, no_menos] nos da fonte
+        @param valor ganho
         '''
         super().__init__(name, nos)
         self.valor = valor
@@ -495,14 +501,17 @@ class FonteCorrenteTensao(Componente):
 
 # tensao controlada por corrente
 class FonteTensaoCorrente(Componente):
+    '''!
+    @brief Esta classe implementa a Fonte de tensao controlada por corrente e sua estampa
+    '''
     _linear = True
     _num_nos = 4
     _num_nos_mod = 2
     def __init__(self, name: str, nos: list[str], valor: float):
-        '''
-        Fonte de tensao controlada por corrente
-        nos: [no_mais, no_menos] nos da fonte
-        valor: ganho
+        '''!
+        @brief Construtor da Fonte de tensao controlada por corrente
+        @param nos [no_mais, no_menos] nos da fonte
+        @param valor ganho
         '''
         super().__init__(name, nos)
         self.valor = valor
@@ -514,13 +523,16 @@ class FonteTensaoCorrente(Componente):
         return Gn, I
 
 class Diodo(Componente):
+    '''!
+    @brief Esta classe implementa o Diodo e sua estampa
+    '''
     _linear = True
     _num_nos = 2
     _num_nos_mod = 2
     def __init__(self, name: str, nos: list[str]):
-        '''
-        Diodo
-        nos: [no_mais, no_menos] nos do diodo
+        '''!
+        @brief Construtor do Diodo
+        @param nos [no_mais, no_menos] nos do diodo
         '''
         super().__init__(name, nos)
 
@@ -531,13 +543,16 @@ class Diodo(Componente):
         return Gn, I
 
 class AmpOp(Componente):
+    '''!
+    @brief Esta classe implementa o Amplificador Operacional ideal e sua estampa
+    '''
     _linear = True
     _num_nos = 3
     _num_nos_mod = 1
     def __init__(self, name: str, nos: list[str]):
-        '''
-        Amplificador Operacional
-        nos: [no_mais, no_menos, no_saida] nos do amp op
+        '''!
+        @brief Construtor do Amplificador Operacional
+        @param nos [no_mais, no_menos, no_saida] nos do amp op
         '''
         super().__init__(name, nos)
 
@@ -548,19 +563,27 @@ class AmpOp(Componente):
         return Gn, I
 
 class Mosfet(Componente):
+    '''!
+    @brief Esta classe implementa o transistor MOSFET e sua estampa
+    '''
     def __init__(self):
-        '''Mosfet'''
+        '''!
+        @brief Construtor do Mosfet
+        '''
         raise NotImplementedError
 
 class FonteCorrente(Componente):
+    '''!
+    @brief Esta classe implementa a Fonte de corrente e sua estampa
+    '''
     _linear = True
     _num_nos = 2
     _num_nos_mod = 0
     def __init__(self, name: str, nos: list[str], args: list):
-        '''
-        Fonte de corrente
-        nos: [no_mais, no_menos] nos da fonte
-        list: parametros no estilo SPICE
+        '''!
+        @brief Construtor Fonte de corrente
+        @param nos [no_mais, no_menos] nos da fonte
+        @param args parametros no estilo SPICE
         '''
         super().__init__(name, nos)
         self.args = args
@@ -572,14 +595,17 @@ class FonteCorrente(Componente):
         return Gn, I
 
 class FonteTensao(Componente):
+    '''!
+    @brief Esta classe implementa a Fonte de tensao e sua estampa
+    '''
     _linear = True
     _num_nos = 2
     _num_nos_mod = 1
     def __init__(self, name: str, nos: list[str], args: list):
-        '''
-        Fonte de tensao
-        nos: [no_mais, no_menos] nos da fonte
-        list: parametros no estilo SPICE
+        '''!
+        @brief Construtor da Fonte de tensao
+        @param nos [no_mais, no_menos] nos da fonte
+        @param args parametros no estilo SPICE
         '''
         super().__init__(name, nos)
         self.args = args
