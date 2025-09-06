@@ -1,3 +1,5 @@
+import numpy as np
+
 class Componente():
     '''!
     @brief Classe abstrata base para todos os componentes de circuito
@@ -81,11 +83,56 @@ class Componente():
         '''
         return 'Componente' 
 
-    def estampaBE(self, Gn, I, tensoes):
+    def processa_argumentos_fonte(self, args):
+        '''!
+        @brief Processa argumentos de fontes de tensão ou corrente e coloca nos argumentos do objeto
+        '''
+        print(self.nos, args)
+        if args[0] == 'DC':
+            self.tipo = 'DC'
+            self.nivel_dc = float(args[1])
+        elif args[0] == 'SIN':
+            self.tipo = 'SIN'
+            self.nivel_dc = float(args[1])
+            self.amplitude = float(args[2])
+            self.frequencia = float(args[3])
+            self.atraso = float(args[4])
+            self.amortecimento = float(args[5])
+            self.defasagem = float(args[6])
+            self.ciclos = float(args[7])
+        elif args[0] == 'PULSE':
+            self.tipo = 'PULSE'
+            self.amplitude_1 = float(args[1])
+            self.amplitude_2 = float(args[2])
+            self.atraso = float(args[3])
+            self.tempo_descida = float(args[4])
+            self.tempo_subida = float(args[5])
+            self.tempo_ligado = float(args[6])
+            self.periodo = float(args[7])
+            self.ciclos = float(args[8])
+
+    def calcular_valor_fonte(self, t):
+        if self.tipo == 'DC':
+            valor = self.nivel_dc
+        elif self.tipo == 'SIN':
+            tempo_total = self.atraso + self.ciclos/self.frequencia
+            if t < self.atraso:
+                valor = self.nivel_dc + self.amplitude*np.sin(np.pi*self.defasagem/180)
+            elif t >= tempo_total:
+                valor = self.nivel_dc + self.amplitude*np.exp(-self.amortecimento*(tempo_total - self.atraso))*np.sin(2*np.pi*self.frequencia*(tempo_total-self.atraso) + np.pi/180*self.defasagem)
+            else:
+                valor = self.nivel_dc + self.amplitude*np.exp(-self.amortecimento*(t - self.atraso))*np.sin(2*np.pi*self.frequencia*(t-self.atraso) + np.pi/180*self.defasagem)
+        elif self.tipo == 'PULSE':
+            tempo_total = self.ciclos*self.periodo
+            valor = 0
+        return valor
+
+    def estampaBE(self, Gn, I, t, tensoes):
         '''!
         @brief Adiciona a estampa do componente usando método Backward Euler
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
+        @param t instante de tempo atual
         @param tensoes Vetor de tensões nodais no tempo atual
         @return Tupla (Gn, I) com as matrizes atualizadas
         @details Método abstrato que deve ser implementado por cada componente específico.
@@ -93,11 +140,12 @@ class Componente():
         '''
         raise NotImplementedError
         
-    def estampaTrap(self, Gn, I, tensoes):
+    def estampaTrap(self, Gn, I, t, tensoes):
         '''!
         @brief Adiciona a estampa do componente usando método Trapezoidal
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
+        @param t instante de tempo atual
         @param tensoes Vetor de tensões nodais no tempo atual
         @return Tupla (Gn, I) com as matrizes atualizadas
         @details Método abstrato que deve ser implementado por cada componente específico.
@@ -105,11 +153,12 @@ class Componente():
         '''
         raise NotImplementedError
         
-    def estampaFE(self, Gn, I, tensoes):
+    def estampaFE(self, Gn, I, t, tensoes):
         '''!
         @brief Adiciona a estampa do componente usando método Forward Euler
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
+        @param t instante de tempo atual
         @param tensoes Vetor de tensões nodais no tempo atual
         @return Tupla (Gn, I) com as matrizes atualizadas
         @details Método abstrato que deve ser implementado por cada componente específico.
@@ -134,7 +183,7 @@ class Resistor(Componente):
         @brief Construtor do resistor
         @param name Nome único do resistor
         @param nos Lista com dois nós: [nó_positivo, nó_negativo]
-        @param valor Resistência em ohms (Ω)
+        @param valor Resistência em ohms
         @details O resistor conecta dois nós e tem uma resistência específica.
         A corrente flui do nó positivo para o nó negativo.
         '''
@@ -149,11 +198,12 @@ class Resistor(Componente):
         '''
         return 'R' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
 
-    def estampaBE(self, Gn, I, tensoes):
+    def estampaBE(self, Gn, I, t, tensoes):
         '''!
         @brief Adiciona a estampa do resistor às matrizes do sistema
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
+        @param t instante de tempo atual
         @param tensoes Vetor de tensões nodais (não usado para resistor)
         @return Tupla (Gn, I) com as matrizes atualizadas
         @details A estampa do resistor é a mesma para todos os métodos de integração:
@@ -207,14 +257,15 @@ class Indutor(Componente):
         else:
             return 'L' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
 
-    def estampaBE(self, Gn, I, tensoes):
+    def estampaBE(self, Gn, I, t, tensoes):
         '''!
         @brief Adiciona a estampa do indutor usando método Backward Euler
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
+        @param t instante de tempo atual
         @param tensoes Vetor de tensões nodais no tempo atual
         @return Tupla (Gn, I) com as matrizes atualizadas
-        @details Usando Backward Euler: di/dt ≈ (i(t+Δt) - i(t))/Δt
+        @details Usando Backward Euler: di/dt = (i(t+delta_t) - i(t))/delta_t
         A estampa inclui:
         - Contribuições para as tensões nodais
         - Equação da corrente do indutor
@@ -225,13 +276,13 @@ class Indutor(Componente):
         # Com Backward Euler: V1 - V2 = L * (i(t+Δt) - i(t))/Δt
         # Rearranjando: V1 - V2 - L/Δt * i(t+Δt) = -L/Δt * i(t)
         
-        Gn[self._posicao_nos[0], self._nos_mod[0]] = -1
-        Gn[self._posicao_nos[1], self._nos_mod[0]] = 1
-        Gn[self._nos_mod[0], self._posicao_nos[0]] = 1
-        Gn[self._nos_mod[0], self._posicao_nos[1]] = -1
-        Gn[self._nos_mod[0], self._nos_mod[0]] = (self.valor/self.passo)*self.ic
+        Gn[self._posicao_nos[0], self._nos_mod[0]] -= 1
+        Gn[self._posicao_nos[1], self._nos_mod[0]] += 1
+        Gn[self._nos_mod[0], self._posicao_nos[0]] += 1
+        Gn[self._nos_mod[0], self._posicao_nos[1]] -= 1
+        Gn[self._nos_mod[0], self._nos_mod[0]] += (self.valor/self.passo)*self.ic
 
-        I[self._nos_mod[0]] = self.valor/self.passo
+        I[self._nos_mod[0]] += self.valor/self.passo
         return Gn, I
 
 class Capacitor(Componente):
@@ -272,16 +323,17 @@ class Capacitor(Componente):
         else:
             return 'C' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor) + ' IC=' + str(self.ic)
 
-    def estampaBE(self, Gn, I, tensoes):
+    def estampaBE(self, Gn, I, t, tensoes):
         '''!
         @brief Adiciona a estampa do capacitor usando método Backward Euler
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
+        @param t instante de tempo atual
         @param tensoes Vetor de tensões nodais no tempo atual
         @return Tupla (Gn, I) com as matrizes atualizadas
-        @details Usando Backward Euler: dV/dt ≈ (V(t+Δt) - V(t))/Δt
+        @details Usando Backward Euler: dV/dt = (V(t+delta_t) - V(t))/delta_t
         A estampa inclui:
-        - Condutância equivalente: C/Δt
+        - Condutância equivalente: C/delta_t
         - Termo histórico da tensão anterior
         '''
         # Condutância equivalente do capacitor
@@ -335,6 +387,13 @@ class ResistorNaoLinear(Componente):
         self.i3 = i3
         self.v4 = v4
         self.i4 = i4
+        self.condutancia = Resistor(name + 'R', nos, 0)
+        self.fonte = FonteCorrente(name + 'I', nos, ['DC', '0'])
+
+    def set_posicao_nos(self, posicoes: list[int]):
+        self.condutancia.set_posicao_nos(posicoes)
+        self.fonte.set_posicao_nos(posicoes)
+        super().set_posicao_nos(posicoes)
 
     def __str__(self):
         '''!
@@ -344,11 +403,12 @@ class ResistorNaoLinear(Componente):
         '''
         return 'N' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.v1) + ' ' + str(self.i1) + ' ' + str(self.v2) + ' ' + str(self.i2) + ' ' + str(self.v3) + ' ' + str(self.i3) + ' ' + str(self.v4) + ' ' + str(self.i4)
 
-    def estampaBE(self, Gn, I, tensoes):
+    def estampaBE(self, Gn, I, t, tensoes):
         '''!
         @brief Adiciona a estampa do resistor não linear às matrizes do sistema
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
+        @param t instante de tempo atual
         @param tensoes Vetor de tensões nodais no tempo atual
         @return Tupla (Gn, I) com as matrizes atualizadas
         @details Calcula a condutância e corrente baseada na tensão atual,
@@ -356,6 +416,23 @@ class ResistorNaoLinear(Componente):
         '''
         # TODO: Implementar cálculo da condutância e corrente baseada na tensão atual
         # Esta implementação requer acesso às tensões nodais atuais
+        vab = tensoes[self._posicao_nos[0]] - tensoes[self._posicao_nos[1]]
+        if vab > self.v3:
+            g0 = (self.i4 - self.i3)/(self.v4 - self.v3)
+            i0 = self.i4 - self.v4
+        elif vab > self.v2:
+            g0 = (self.i3 - self.i2)/(self.v3 - self.v2)
+            i0 = self.i3 - self.v3
+        else:
+            g0 = (self.i2 - self.i1)/(self.v2 - self.v1)
+            i0 = self.i2 - self.v2
+        
+        self.condutancia.valor = 1/g0
+        self.fonte.args = ['DC', i0]
+        self.fonte.calcular_valor_fonte(self.fonte.args)
+
+        Gn, I = self.condutancia.estampaBE(Gn, I, t, tensoes)
+        Gn, I = self.fonte.estampaBE(Gn, I, t, tensoes)
         return Gn, I
 
 # tensao controlada por tensao
@@ -395,11 +472,12 @@ class FonteTensaoTensao(Componente):
         '''
         return 'E' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
 
-    def estampaBE(self, Gn, I, tensoes):
+    def estampaBE(self, Gn, I, t, tensoes):
         '''!
         @brief Adiciona a estampa da fonte de tensão controlada por tensão
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
+        @param t instante de tempo atual
         @param tensoes Vetor de tensões nodais no tempo atual
         @return Tupla (Gn, I) com as matrizes atualizadas
         @details A estampa implementa a relação Vout = A * Vin usando um nó extra
@@ -445,7 +523,7 @@ class FonteCorrenteCorrente(Componente):
     def __str__(self):
         return 'F' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
 
-    def estampaBE(self, Gn, I, tensoes):
+    def estampaBE(self, Gn, I, t, tensoes):
         return Gn, I
 
 # corrente controlada por tensao
@@ -468,7 +546,7 @@ class FonteCorrenteTensao(Componente):
     def __str__(self):
         return 'G' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
 
-    def estampaBE(self, Gn, I, tensoes):
+    def estampaBE(self, Gn, I, t, tensoes):
         return Gn, I
 
 # tensao controlada por corrente
@@ -491,7 +569,7 @@ class FonteTensaoCorrente(Componente):
     def __str__(self):
         return 'H' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
 
-    def estampaBE(self, Gn, I, tensoes):
+    def estampaBE(self, Gn, I, t, tensoes):
         return Gn, I
 
 class Diodo(Componente):
@@ -507,11 +585,28 @@ class Diodo(Componente):
         @param nos [no_mais, no_menos] nos do diodo
         '''
         super().__init__(name, nos)
+        self.condutancia = Resistor(name + 'R', nos, 0)
+        self.fonte = FonteCorrente(name + 'I', nos, ['DC', '0'])
+
+    def set_posicao_nos(self, posicoes: list[int]):
+        self.condutancia.set_posicao_nos(posicoes)
+        self.fonte.set_posicao_nos(posicoes)
+        super().set_posicao_nos(posicoes)
 
     def __str__(self):
         return 'D' + self.name + ' ' + ' '.join(str(no) for no in self.nos)
 
-    def estampaBE(self, Gn, I, tensoes):
+    def estampaBE(self, Gn, I, t, tensoes):
+        vab = tensoes[self._posicao_nos[0]] - tensoes[self._posicao_nos[1]]
+        g0 = 3.7751345e-14*np.exp(vab/25e-3)/25e-3
+        id = 3.7751345e-14*(np.exp(vab/25e-3)-1)-g0*vab
+
+        self.condutancia.valor = 1/g0
+        self.fonte.args = ['DC', id]
+        self.fonte.calcular_valor_fonte(self.fonte.args)
+
+        Gn, I = self.condutancia.estampaBE(Gn, I, t, tensoes)
+        Gn, I = self.fonte.estampaBE(Gn, I, t, tensoes)
         return Gn, I
 
 class AmpOp(Componente):
@@ -531,7 +626,7 @@ class AmpOp(Componente):
     def __str__(self):
         return 'O' + self.name + ' ' + ' '.join(str(no) for no in self.nos)
 
-    def estampaBE(self, Gn, I, tensoes):
+    def estampaBE(self, Gn, I, t, tensoes):
         return Gn, I
 
 class Mosfet(Componente):
@@ -558,12 +653,19 @@ class FonteCorrente(Componente):
         @param args parametros no estilo SPICE
         '''
         super().__init__(name, nos)
+        self.processa_argumentos_fonte(args)
         self.args = args
 
     def __str__(self):
         return 'I' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + ' '.join(self.args)
 
-    def estampaBE(self, Gn, I, tensoes):
+    def estampaBE(self, Gn, I, t, tensoes):
+        # Condutância equivalente do capacitor
+        corrente = self.calcular_valor_fonte(t)
+
+        # Termo histórico da tensão anterior
+        I[self._posicao_nos[0]] += corrente
+        I[self._posicao_nos[1]] -= corrente
         return Gn, I
 
 class FonteTensao(Componente):
@@ -580,10 +682,22 @@ class FonteTensao(Componente):
         @param args parametros no estilo SPICE
         '''
         super().__init__(name, nos)
+        self.processa_argumentos_fonte(args)
         self.args = args
 
     def __str__(self):
         return 'V' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + ' '.join(self.args)
 
-    def estampaBE(self, Gn, I, tensoes):
+    def estampaBE(self, Gn, I, t, tensoes):
+        # Condutância equivalente do capacitor
+        tensao = self.calcular_valor_fonte(t)
+        
+        # Estampa da condutância
+        Gn[self._posicao_nos[0], self._nos_mod[0]] += 1
+        Gn[self._posicao_nos[0], self._nos_mod[0]] -= 1
+        Gn[self._nos_mod[0], self._posicao_nos[0]] -= 1
+        Gn[self._nos_mod[0], self._posicao_nos[1]] += 1
+
+        # Termo histórico da tensão anterior
+        I[self._nos_mod[0]] += tensao
         return Gn, I
