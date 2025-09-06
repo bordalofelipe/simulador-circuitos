@@ -214,7 +214,7 @@ class Indutor(Componente):
         @param I Vetor de correntes do sistema
         @param tensoes Vetor de tensões nodais no tempo atual
         @return Tupla (Gn, I) com as matrizes atualizadas
-        @details Usando Backward Euler: di/dt ≈ (i(t+Δt) - i(t))/Δt
+        @details Usando Backward Euler: di/dt = (i(t+delta_t) - i(t))/delta_t
         A estampa inclui:
         - Contribuições para as tensões nodais
         - Equação da corrente do indutor
@@ -279,9 +279,9 @@ class Capacitor(Componente):
         @param I Vetor de correntes do sistema
         @param tensoes Vetor de tensões nodais no tempo atual
         @return Tupla (Gn, I) com as matrizes atualizadas
-        @details Usando Backward Euler: dV/dt ≈ (V(t+Δt) - V(t))/Δt
+        @details Usando Backward Euler: dV/dt = (V(t+delta_t) - V(t))/delta_t
         A estampa inclui:
-        - Condutância equivalente: C/Δt
+        - Condutância equivalente: C/delta_t
         - Termo histórico da tensão anterior
         '''
         # Condutância equivalente do capacitor
