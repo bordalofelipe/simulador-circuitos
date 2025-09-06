@@ -1,6 +1,5 @@
 class Componente():
     '''!
-    @class Componente
     @brief Classe abstrata base para todos os componentes de circuito
     @details Esta classe define a interface comum para todos os componentes de circuito elétrico.
     Ela implementa o padrão de projeto Template Method, onde cada componente específico
@@ -19,7 +18,6 @@ class Componente():
     
     def __init__(self, name: str, nos: list[str]):
         '''!
-        @fn __init__(self, name: str, nos: list[str])
         @brief Construtor da classe Componente
         @param name Nome único do componente no circuito
         @param nos Lista de nós conectados ao componente
@@ -56,7 +54,6 @@ class Componente():
 
     def set_nos_mod(self, nos_mod: list[int]):
         '''!
-        @fn set_nos_mod(self, nos_mod: list[int])
         @brief Define os nós extras necessários para análise nodal modificada
         @param nos_mod Lista dos índices dos nós extras nas matrizes Gn e I
         @exception AssertionError Se o número de nós extras não corresponder ao esperado
@@ -68,7 +65,6 @@ class Componente():
 
     def set_posicao_nos(self, posicoes: list[int]):
         '''!
-        @fn set_posicao_nos(self, posicoes: list[int])
         @brief Define as posições dos nós do componente nas matrizes do sistema
         @param posicoes Lista das posições dos nós nas matrizes Gn e I
         @details Estas posições são usadas para calcular corretamente as contribuições
@@ -78,7 +74,6 @@ class Componente():
 
     def __str__(self):
         '''!
-        @fn __str__(self)
         @brief Retorna representação do componente como linha da netlist
         @return String formatada representando o componente
         @details Esta representação é usada para salvar o circuito em arquivo netlist
@@ -88,7 +83,6 @@ class Componente():
 
     def estampaBE(self, Gn, I, tensoes):
         '''!
-        @fn estampaBE(self, Gn, I, tensoes)
         @brief Adiciona a estampa do componente usando método Backward Euler
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
@@ -101,7 +95,6 @@ class Componente():
         
     def estampaTrap(self, Gn, I, tensoes):
         '''!
-        @fn estampaTrap(self, Gn, I, tensoes)
         @brief Adiciona a estampa do componente usando método Trapezoidal
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
@@ -114,7 +107,6 @@ class Componente():
         
     def estampaFE(self, Gn, I, tensoes):
         '''!
-        @fn estampaFE(self, Gn, I, tensoes)
         @brief Adiciona a estampa do componente usando método Forward Euler
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
@@ -127,7 +119,6 @@ class Componente():
 
 class Resistor(Componente):
     '''!
-    @class Resistor
     @brief Representa um resistor linear no circuito
     @details O resistor é um componente linear que obedece à lei de Ohm: V = R*I.
     Sua estampa na análise nodal é bem definida e não depende do método de integração.
@@ -140,7 +131,6 @@ class Resistor(Componente):
     
     def __init__(self, name: str, nos: list[str], valor: float):
         '''!
-        @fn __init__(self, name: str, nos: list[str], valor: float)
         @brief Construtor do resistor
         @param name Nome único do resistor
         @param nos Lista com dois nós: [nó_positivo, nó_negativo]
@@ -153,7 +143,6 @@ class Resistor(Componente):
 
     def __str__(self):
         '''!
-        @fn __str__(self)
         @brief Retorna representação do resistor como linha da netlist
         @return String no formato "R<nome> <nó1> <nó2> <valor>"
         @details Formato compatível com SPICE para resistor.
@@ -162,7 +151,6 @@ class Resistor(Componente):
 
     def estampaBE(self, Gn, I, tensoes):
         '''!
-        @fn estampaBE(self, Gn, I, tensoes)
         @brief Adiciona a estampa do resistor às matrizes do sistema
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
@@ -182,7 +170,6 @@ class Resistor(Componente):
 
 class Indutor(Componente):
     '''!
-    @class Indutor
     @brief Representa um indutor no circuito
     @details O indutor é um componente linear que armazena energia no campo magnético.
     Sua corrente e tensão estão relacionadas por: V = L * dI/dt.
@@ -196,7 +183,6 @@ class Indutor(Componente):
     
     def __init__(self, name: str, nos: list[str], valor: float, ic=0.0):
         '''!
-        @fn __init__(self, name: str, nos: list[str], valor: float, ic=0.0)
         @brief Construtor do indutor
         @param name Nome único do indutor
         @param nos Lista com dois nós: [nó_positivo, nó_negativo]
@@ -212,7 +198,6 @@ class Indutor(Componente):
 
     def __str__(self):
         '''!
-        @fn __str__(self)
         @brief Retorna representação do indutor como linha da netlist
         @return String no formato "L<nome> <nó1> <nó2> <valor> [IC=<corrente_inicial>]"
         @details Formato compatível com SPICE para indutor.
@@ -224,7 +209,6 @@ class Indutor(Componente):
 
     def estampaBE(self, Gn, I, tensoes):
         '''!
-        @fn estampaBE(self, Gn, I, tensoes)
         @brief Adiciona a estampa do indutor usando método Backward Euler
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
@@ -252,7 +236,6 @@ class Indutor(Componente):
 
 class Capacitor(Componente):
     '''!
-    @class Capacitor
     @brief Representa um capacitor no circuito
     @details O capacitor é um componente linear que armazena energia no campo elétrico.
     Sua corrente e tensão estão relacionadas por: I = C * dV/dt.
@@ -266,7 +249,6 @@ class Capacitor(Componente):
     
     def __init__(self, name: str, nos: list[str], valor: float, ic=0.0):
         '''!
-        @fn __init__(self, name: str, nos: list[str], valor: float, ic=0.0)
         @brief Construtor do capacitor
         @param name Nome único do capacitor
         @param nos Lista com dois nós: [nó_positivo, nó_negativo]
@@ -281,7 +263,6 @@ class Capacitor(Componente):
 
     def __str__(self):
         '''!
-        @fn __str__(self)
         @brief Retorna representação do capacitor como linha da netlist
         @return String no formato "C<nome> <nó1> <nó2> <valor> [IC=<corrente_inicial>]"
         @details Formato compatível com SPICE para capacitor.
@@ -293,7 +274,6 @@ class Capacitor(Componente):
 
     def estampaBE(self, Gn, I, tensoes):
         '''!
-        @fn estampaBE(self, Gn, I, tensoes)
         @brief Adiciona a estampa do capacitor usando método Backward Euler
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
@@ -320,7 +300,6 @@ class Capacitor(Componente):
 
 class ResistorNaoLinear(Componente):
     '''!
-    @class ResistorNaoLinear
     @brief Representa um resistor não linear com característica de 3 segmentos
     @details O resistor não linear é modelado por uma curva tensão-corrente definida
     por 4 pontos (V1,I1), (V2,I2), (V3,I3), (V4,I4), formando 3 segmentos lineares.
@@ -334,7 +313,6 @@ class ResistorNaoLinear(Componente):
     
     def __init__(self, name: str, nos: list[str], v1: float, i1: float, v2: float, i2: float, v3: float, i3: float, v4: float, i4: float):
         '''!
-        @fn __init__(self, name: str, nos: list[str], v1: float, i1: float, v2: float, i2: float, v3: float, i3: float, v4: float, i4: float)
         @brief Construtor do resistor não linear
         @param name Nome único do resistor
         @param nos Lista com dois nós: [nó_positivo, nó_negativo]
@@ -360,7 +338,6 @@ class ResistorNaoLinear(Componente):
 
     def __str__(self):
         '''!
-        @fn __str__(self)
         @brief Retorna representação do resistor não linear como linha da netlist
         @return String no formato "N<nome> <nó1> <nó2> <v1> <i1> <v2> <i2> <v3> <i3> <v4> <i4>"
         @details Formato específico para resistor não linear com 4 pontos.
@@ -369,7 +346,6 @@ class ResistorNaoLinear(Componente):
 
     def estampaBE(self, Gn, I, tensoes):
         '''!
-        @fn estampaBE(self, Gn, I, tensoes)
         @brief Adiciona a estampa do resistor não linear às matrizes do sistema
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
@@ -385,7 +361,6 @@ class ResistorNaoLinear(Componente):
 # tensao controlada por tensao
 class FonteTensaoTensao(Componente):
     '''!
-    @class FonteTensaoTensao
     @brief Representa uma fonte de tensão controlada por tensão (VCVS)
     @details A fonte de tensão controlada por tensão é um componente linear que
     gera uma tensão de saída proporcional à tensão de entrada. A relação é:
@@ -402,7 +377,6 @@ class FonteTensaoTensao(Componente):
     
     def __init__(self, name: str, nos: list[str], valor: float):
         '''!
-        @fn __init__(self, name: str, nos: list[str], valor: float)
         @brief Construtor da fonte de tensão controlada por tensão
         @param name Nome único da fonte
         @param nos Lista com quatro nós: [nó_saída_pos, nó_saída_neg, nó_controle_pos, nó_controle_neg]
@@ -415,7 +389,6 @@ class FonteTensaoTensao(Componente):
 
     def __str__(self):
         '''!
-        @fn __str__(self)
         @brief Retorna representação da fonte como linha da netlist
         @return String no formato "E<nome> <nó_saída_pos> <nó_saída_neg> <nó_controle_pos> <nó_controle_neg> <ganho>"
         @details Formato compatível com SPICE para fonte de tensão controlada por tensão.
@@ -424,7 +397,6 @@ class FonteTensaoTensao(Componente):
 
     def estampaBE(self, Gn, I, tensoes):
         '''!
-        @fn estampaBE(self, Gn, I, tensoes)
         @brief Adiciona a estampa da fonte de tensão controlada por tensão
         @param Gn Matriz de condutância do sistema
         @param I Vetor de correntes do sistema
