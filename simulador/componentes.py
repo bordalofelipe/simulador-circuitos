@@ -134,7 +134,7 @@ class Resistor(Componente):
         @brief Construtor do resistor
         @param name Nome único do resistor
         @param nos Lista com dois nós: [nó_positivo, nó_negativo]
-        @param valor Resistência em ohms (Ω)
+        @param valor Resistência em ohms
         @details O resistor conecta dois nós e tem uma resistência específica.
         A corrente flui do nó positivo para o nó negativo.
         '''
