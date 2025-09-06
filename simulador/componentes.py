@@ -387,6 +387,13 @@ class ResistorNaoLinear(Componente):
         self.i3 = i3
         self.v4 = v4
         self.i4 = i4
+        self.condutancia = Resistor(name + 'R', nos, 0)
+        self.fonte = FonteCorrente(name + 'I', nos, ['DC', '0'])
+
+    def set_posicao_nos(self, posicoes: list[int]):
+        self.condutancia.set_posicao_nos(posicoes)
+        self.fonte.set_posicao_nos(posicoes)
+        super().set_posicao_nos(posicoes)
 
     def __str__(self):
         '''!
@@ -409,6 +416,23 @@ class ResistorNaoLinear(Componente):
         '''
         # TODO: Implementar cálculo da condutância e corrente baseada na tensão atual
         # Esta implementação requer acesso às tensões nodais atuais
+        vab = tensoes[self._posicao_nos[0]] - tensoes[self._posicao_nos[1]]
+        if vab > self.v3:
+            g0 = (self.i4 - self.i3)/(self.v4 - self.v3)
+            i0 = self.i4 - self.v4
+        elif vab > self.v2:
+            g0 = (self.i3 - self.i2)/(self.v3 - self.v2)
+            i0 = self.i3 - self.v3
+        else:
+            g0 = (self.i2 - self.i1)/(self.v2 - self.v1)
+            i0 = self.i2 - self.v2
+        
+        self.condutancia.valor = 1/g0
+        self.fonte.args = ['DC', i0]
+        self.fonte.calcular_valor_fonte(self.fonte.args)
+
+        Gn, I = self.condutancia.estampaBE(Gn, I, t, tensoes)
+        Gn, I = self.fonte.estampaBE(Gn, I, t, tensoes)
         return Gn, I
 
 # tensao controlada por tensao
@@ -562,7 +586,7 @@ class Diodo(Componente):
         '''
         super().__init__(name, nos)
         self.condutancia = Resistor(name + 'R', nos, 0)
-        self.fonte = FonteCorrente(name + 'I', nos, ['DC', 0])
+        self.fonte = FonteCorrente(name + 'I', nos, ['DC', '0'])
 
     def set_posicao_nos(self, posicoes: list[int]):
         self.condutancia.set_posicao_nos(posicoes)
