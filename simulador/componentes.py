@@ -547,6 +547,13 @@ class FonteCorrenteTensao(Componente):
         return 'G' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
 
     def estampaBE(self, Gn, I, t, tensoes):
+        # Equação da corrente: Iout = G * (V3 - V4)
+        # Contribuições para os nós de saída
+        Gn[self._posicao_nos[0], self._posicao_nos[2]] += self.valor  # +G*V3
+        Gn[self._posicao_nos[0], self._posicao_nos[3]] -= self.valor  # -G*V4
+        Gn[self._posicao_nos[1], self._posicao_nos[2]] -= self.valor  # -G*V3
+        Gn[self._posicao_nos[1], self._posicao_nos[3]] += self.valor  # +G*V4
+        
         return Gn, I
 
 # tensao controlada por corrente
@@ -570,6 +577,28 @@ class FonteTensaoCorrente(Componente):
         return 'H' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
 
     def estampaBE(self, Gn, I, t, tensoes):
+        # Nós extras para as variáveis auxiliares
+        no_jx = self._nos_mod[0]  # jx
+        no_jy = self._nos_mod[1]  # jy
+        
+        # Equação da tensão de saída: Vout = Rm * Iin
+        # V1 - V2 = Rm * (corrente de controle)
+        
+        # Contribuições para a equação da tensão
+        Gn[self._posicao_nos[0], no_jx] -= 1  # V1
+        Gn[self._posicao_nos[1], no_jx] += 1  # V2
+        Gn[self._posicao_nos[2], no_jy] -= 1  # V3
+        Gn[self._posicao_nos[3], no_jy] += 1  # V4
+        
+        # Equação da corrente jx
+        Gn[no_jx, self._posicao_nos[0]] += 1
+        Gn[no_jx, self._posicao_nos[1]] -= 1
+        
+        # Equação da corrente jy
+        Gn[no_jy, self._posicao_nos[2]] += 1
+        Gn[no_jy, self._posicao_nos[3]] -= 1
+        Gn[no_jy, no_jx] += self.valor
+        
         return Gn, I
 
 class Diodo(Componente):
@@ -627,6 +656,22 @@ class AmpOp(Componente):
         return 'O' + self.name + ' ' + ' '.join(str(no) for no in self.nos)
 
     def estampaBE(self, Gn, I, t, tensoes):
+        # Nó extra para corrente de saída do amp op
+        no_corrente = self._nos_mod[0]
+        
+        # Equação da tensão de saída: Vout = A * (V+ - V-)
+        # Para amp op ideal: A = infinito, então V+ = V-
+        # Equação: V+ - V- = 0
+        
+        # Contribuições para a equação V+ - V- = 0
+        Gn[self._posicao_nos[0], no_corrente] -= 1  # -V+
+        Gn[self._posicao_nos[1], no_corrente] += 1  # +V-
+        
+        # Equação da corrente de saída
+        Gn[no_corrente, self._posicao_nos[0]] += 1   # +V+
+        Gn[no_corrente, self._posicao_nos[1]] -= 1   # -V-
+        Gn[no_corrente, self._posicao_nos[2]] += 1   # +Vout
+        
         return Gn, I
 
 class Mosfet(Componente):
