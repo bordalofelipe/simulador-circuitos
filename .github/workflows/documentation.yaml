@@ -40,7 +40,7 @@ jobs:
         # additional-packages: # optional, default is 
     - name: Move generated site to docs folder
       run: |
-        cp html/* docs/
+        cp -r html/* docs/
         rm docs/Doxyfile
     - name: Upload Documentation Artifacts
       uses: actions/upload-artifact@v4
