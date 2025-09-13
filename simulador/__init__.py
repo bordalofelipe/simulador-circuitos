@@ -1,3 +1,4 @@
+import numpy as np
 from simulador.componentes import *
 
 '''
@@ -73,7 +74,49 @@ class Circuito():
         print('Circuito final com ' + str(len(self.__nos)) + ' nos')
         if nao_linear:
             print('Analise nao linear necessaria')
-        resultado = Resultado(self.__nos, [], []) # pula o no terra
+        resultado = Resultado(self.__nos[1:], [], []) # pula o no terra
+        tempo = 0
+        while tempo < self.tempo_total:
+            matrizGn = np.zeros((len(self.__nos), len(self.__nos)))#, dtype=np.complex64)
+            matrizI = np.zeros(len(self.__nos))#, dtype=np.complex64)
+            passo_interno = 0
+            '''if tempo == 0:
+                passo = self.passo/self.fator_de_passo
+            else:
+                passo = self.passo'''
+            passo = self.passo
+            while passo_interno < self.passo_interno:
+                if len(resultado) == 0:
+                    previous = [0.0 for i in range(len(self.__nos))]
+                else:
+                    previous = resultado[0]
+                while True:
+                    '''Parte que testa que nao converge'''
+                    matrizGn = np.zeros((len(self.__nos), len(self.__nos)))#, dtype=np.complex64)
+                    matrizI = np.zeros((len(self.__nos), 1))#, dtype=np.complex64)
+                    for com in self.__componentes:
+                        com.passo = self.passo
+                        if self.tipo_simulacao == 'BE':
+                            matrizGn, matrizI = com.estampaBE(matrizGn, matrizI, tempo, previous)
+                        elif self.tipo_simulacao == 'FE':
+                            matrizGn, matrizI = com.estampaFE(matrizGn, matrizI, tempo, previous)
+                        elif self.tipo_simulacao == 'TRAP':
+                            matrizGn, matrizI = com.estampaTrap(matrizGn, matrizI, tempo, previous)
+                    print(self.__nos)
+                    print(matrizGn, matrizI)
+                    tensoes = np.linalg.solve(matrizGn[1:,1:], matrizI[1:])
+                    tensoes = list(tensoes)
+                    tolerancia = [abs(i-j) for i, j in zip(tensoes, previous)]
+                    if nao_linear and max(tolerancia) > 0.001:
+                        previous = tensoes
+                    else:
+                        break
+                    '''Update all initial conditions (WTF)'''
+                passo_interno += 1
+            resultado.append(tempo, [i[0] for i in tensoes])
+            if round(tempo/self.tempo_total) % 10 == 0:
+                print(tempo, self.tempo_total)
+            tempo += passo
         return resultado
 
     def export(self, filename: str):
@@ -125,9 +168,9 @@ def import_netlist(filename: str):
                 raise NotImplementedError
                 componentes.append(Mosfet(c[0][1:], [c[1], c[2], c[3]], c[4], c[5], c[6], c[7], c[8], c[9]))
             elif tipo == 'I':
-                componentes.append(FonteCorrente(c[0][1:], [c[1], c[2]], c[2:]))
+                componentes.append(FonteCorrente(c[0][1:], [c[1], c[2]], c[3:]))
             elif tipo == 'V':
-                componentes.append(FonteTensao(c[0][1:], [c[1], c[2]], c[2:]))
+                componentes.append(FonteTensao(c[0][1:], [c[1], c[2]], c[3:]))
             elif tipo == '.':
                 # arquivo acabou!
                 break
@@ -197,11 +240,13 @@ class Resultado():
 def import_resultado(filename: str):
     with open(filename) as f:
         line = f.readline()
-        nos = line.split(';')[1:]
+        nos = line.replace('\n', '').split(' ')[1:]
+        print(nos, 'a', len(nos))
         resultado = Resultado(nos, [], [])
         line = f.readline()
         while line != '':
-            r = line.split(';')
+            r = line.replace('\n', '').split(' ')
+            r = filter(lambda i: i != '', r)
             r = [float(i) for i in r]
             t, r = r[0], r[1:]
             resultado.append(t, r)
