@@ -521,6 +521,11 @@ class FonteCorrenteCorrente(Componente):
         self.valor = valor
 
     def __str__(self):
+        '''!
+        @brief Retorna representação da fonte como linha da netlist
+        @return String no formato "F<nome> <nó_saída_pos> <nó_saída_neg> <nó_controle_pos> <nó_controle_neg> <ganho>"
+        @details Formato compatível com SPICE para fonte de tensão controlada por tensão.
+        '''
         return 'F' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
 
     def estampaBE(self, Gn, I, t, tensoes):
@@ -544,9 +549,23 @@ class FonteCorrenteTensao(Componente):
         self.valor = valor
 
     def __str__(self):
+        '''!
+        @brief Retorna representação da fonte como linha da netlist
+        @return String no formato "G<nome> <nó_saída_pos> <nó_saída_neg> <nó_controle_pos> <nó_controle_neg> <ganho>"
+        @details Formato compatível com SPICE para fonte de tensão controlada por tensão.
+        '''
         return 'G' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
 
     def estampaBE(self, Gn, I, t, tensoes):
+        '''!
+        @brief Adiciona a estampa da fonte de corrente controlada por tensão
+        @param Gn Matriz de condutância do sistema
+        @param I Vetor de correntes do sistema
+        @param t instante de tempo atual
+        @param tensoes Vetor de tensões nodais no tempo atual
+        @return Tupla (Gn, I) com as matrizes atualizadas
+        @details A estampa implementa a relação Iout = G * Vin
+        '''
         # Equação da corrente: Iout = G * (V3 - V4)
         # Contribuições para os nós de saída
         Gn[self._posicao_nos[0], self._posicao_nos[2]] += self.valor  # +G*V3
@@ -574,9 +593,24 @@ class FonteTensaoCorrente(Componente):
         self.valor = valor
 
     def __str__(self):
+        '''!
+        @brief Retorna representação da fonte como linha da netlist
+        @return String no formato "H<nome> <nó_saída_pos> <nó_saída_neg> <nó_controle_pos> <nó_controle_neg> <ganho>"
+        @details Formato compatível com SPICE para fonte de tensão controlada por tensão.
+        '''
         return 'H' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
 
     def estampaBE(self, Gn, I, t, tensoes):
+        '''!
+        @brief Adiciona a estampa da fonte de tensão controlada por corrente
+        @param Gn Matriz de condutância do sistema
+        @param I Vetor de correntes do sistema
+        @param t instante de tempo atual
+        @param tensoes Vetor de tensões nodais no tempo atual
+        @return Tupla (Gn, I) com as matrizes atualizadas
+        @details A estampa implementa a relação Vout = H * Vin usando dois nós extra
+        para representar a corrente da fonte de tensão e do nó de controle.
+        '''
         # Nós extras para as variáveis auxiliares
         no_jx = self._nos_mod[0]  # jx
         no_jy = self._nos_mod[1]  # jy
@@ -623,6 +657,11 @@ class Diodo(Componente):
         super().set_posicao_nos(posicoes)
 
     def __str__(self):
+        '''!
+        @brief Retorna representação do diodo como linha da netlist
+        @return String no formato "N<nome> <nó+> <nó->"
+        @details Formato específico para diodo com dois terminais.
+        '''
         return 'D' + self.name + ' ' + ' '.join(str(no) for no in self.nos)
 
     def estampaBE(self, Gn, I, t, tensoes):
@@ -653,6 +692,11 @@ class AmpOp(Componente):
         super().__init__(name, nos)
 
     def __str__(self):
+        '''!
+        @brief Retorna representação do amplificador operacional ideal como linha da netlist
+        @return String no formato "O<nome> <nó+> <nó-> <nó-saida>"
+        @details Formato específico para amplificador operacional ideal com dois terminais.
+        '''
         return 'O' + self.name + ' ' + ' '.join(str(no) for no in self.nos)
 
     def estampaBE(self, Gn, I, t, tensoes):
@@ -702,6 +746,14 @@ class FonteCorrente(Componente):
         self.args = args
 
     def __str__(self):
+        '''!
+        @brief Retorna representação da fonte de corrente como linha da netlist
+        @return String no formato "I<nome> <nó+> <nó-> <args>"
+        @details Para fontes, temos três possibilidades para args:
+        - DC <valor> : Fonte DC de <valor> amperes
+        - SIN <valor-dc> <amplitude> <frequência> <atraso> <amortecimento> <defasagem> <ciclos> : Fonte senoidal
+        - PULSE <amplitude-1> <amplitude-2> <atraso> <tempo-subida <tempo-descida> <tempo-ligado> <período> <ciclos> : Fonte pulsada
+        '''
         return 'I' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + ' '.join(self.args)
 
     def estampaBE(self, Gn, I, t, tensoes):
@@ -731,6 +783,14 @@ class FonteTensao(Componente):
         self.args = args
 
     def __str__(self):
+        '''!
+        @brief Retorna representação da fonte de corrente como linha da netlist
+        @return String no formato "V<nome> <nó+> <nó-> <args>"
+        @details Para fontes, temos três possibilidades para args:
+        - DC <valor> : Fonte DC de <valor> volts
+        - SIN <valor-dc> <amplitude> <frequência> <atraso> <amortecimento> <defasagem> <ciclos> : Fonte senoidal
+        - PULSE <amplitude-1> <amplitude-2> <atraso> <tempo-subida <tempo-descida> <tempo-ligado> <período> <ciclos> : Fonte pulsada
+        '''
         return 'V' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + ' '.join(self.args)
 
     def estampaBE(self, Gn, I, t, tensoes):
