@@ -38,6 +38,10 @@ jobs:
         enable-latex: true # optional
         # Extra alpine packages for the build environment
         # additional-packages: # optional, default is 
+    - name: Move assets to html folder
+      run: |
+        mv docs/* html/
+        rm html/Doxyfile
     - name: Upload Documentation Artifacts
       uses: actions/upload-artifact@v4
       with:
