@@ -89,7 +89,7 @@ class Circuito():
                 if len(resultado) == 0:
                     previous = [0.0 for i in range(len(self.__nos))]
                 else:
-                    previous = resultado[0]
+                    previous = resultado[-1][1] # resultado[i] = (tempo, [tensoes])
                 while True:
                     '''Parte que testa que nao converge'''
                     matrizGn = np.zeros((len(self.__nos), len(self.__nos)))#, dtype=np.complex64)
