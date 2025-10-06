@@ -504,32 +504,6 @@ class FonteTensaoTensao(Componente):
         return Gn, I
 
 # corrente controlada por corrente
-# class FonteCorrenteCorrente(Componente):
-#     '''!
-#     @brief Esta classe implementa a Fonte de corrente controlada por corrente e sua estampa
-#     '''
-#     _linear = True
-#     _num_nos = 4
-#     _num_nos_mod = 1
-#     def __init__(self, name: str, nos: list[str], valor: float):
-#         '''!
-#         @brief Construtor da Fonte de corrente controlada por corrente
-#         @param nos [no_mais, no_menos] nos da fonte
-#         @param valor ganho
-#         '''
-#         super().__init__(name, nos)
-#         self.valor = valor
-
-#     def __str__(self):
-#         '''!
-#         @brief Retorna representação da fonte como linha da netlist
-#         @return String no formato "F<nome> <nó_saída_pos> <nó_saída_neg> <nó_controle_pos> <nó_controle_neg> <ganho>"
-#         @details Formato compatível com SPICE para fonte de tensão controlada por tensão.
-#         '''
-#         return 'F' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
-
-#     def estampaBE(self, Gn, I, t, tensoes):
-#         return Gn, I
 class FonteCorrenteCorrente(Componente):
     '''!
     @brief Fonte de Corrente Controlada por Corrente (F)
@@ -539,44 +513,25 @@ class FonteCorrenteCorrente(Componente):
     A estampa adiciona o ganho (A) na matriz Gn, acoplando a corrente de saída
     à corrente da fonte de tensão de controle (jx).
     '''
-    _num_nos = 3  # [nó_saida+, nó_saida-, V_controle_nome]
-    _num_nos_mod = 0
-    _unidade = 'A/A'
-    _posicao_no_controle = -1 # Índice da variável de corrente de controle
-
-    def __init__(self, name: str, nos: list[str], args: list):
+    _linear = True
+    _num_nos = 4
+    _num_nos_mod = 1
+    def __init__(self, name: str, nos: list[str], valor: float):
         '''!
-        @brief Construtor da Fonte de Corrente Controlada por Corrente
-        @param name Nome do componente
-        @param nos Lista de nós no formato ['nó_saida+', 'nó_saida-', 'V_controle']
-        @param args Lista de argumentos, contendo o ganho de corrente
+        @brief Construtor da Fonte de corrente controlada por corrente
+        @param nos [no_mais, no_menos] nos da fonte
+        @param valor ganho
         '''
-        # O terceiro "nó" é na verdade o nome da fonte de tensão de controle
-        self.fonte_controle = nos[2]
-        # A classe base só deve receber os nós elétricos reais
-        super().__init__(name, nos[:2])
-        self.valor = float(args[0])
+        super().__init__(name, nos)
+        self.valor = valor
 
     def __str__(self):
         '''!
-        @brief Retorna representação do componente como linha da netlist
+        @brief Retorna representação da fonte como linha da netlist
+        @return String no formato "F<nome> <nó_saída_pos> <nó_saída_neg> <nó_controle_pos> <nó_controle_neg> <ganho>"
+        @details Formato compatível com SPICE para fonte de tensão controlada por tensão.
         '''
-        # Recria a lista de nós original para a string de saída
-        nos_originais = self.nos + [self.fonte_controle]
-        return f'F{self.name} {" ".join(nos_originais)} {self.valor}'
-
-    def vincular_variaveis_controle(self, mapa_variaveis: dict):
-        '''!
-        @brief Encontra e armazena o índice da variável de corrente de controle.
-        @param mapa_variaveis Dicionário que mapeia nomes de componentes (fontes V)
-        aos seus índices de variáveis de corrente.
-        @details Este método deve ser chamado pelo simulador uma vez antes do início
-        da análise para vincular este componente à variável que o controla.
-        '''
-        if self.fonte_controle in mapa_variaveis:
-            self._posicao_no_controle = mapa_variaveis[self.fonte_controle]
-        else:
-            raise ValueError(f"Fonte de tensão de controle '{self.fonte_controle}' não encontrada para o componente '{self.name}'.")
+        return 'F' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
 
     def estampaBE(self, Gn, I, t, tensoes):
         '''!
@@ -586,20 +541,14 @@ class FonteCorrenteCorrente(Componente):
         KCL @ no_mais: ... - ganho * jx = 0  => Gn[no_mais, jx] -= ganho
         KCL @ no_menos: ... + ganho * jx = 0 => Gn[no_menos, jx] += ganho
         '''
-        if self._posicao_no_controle == -1:
-            raise RuntimeError(f"Variável de controle para '{self.name}' não foi vinculada antes da simulação.")
-
-        no_mais = self._posicao_nos[0]
-        no_menos = self._posicao_nos[1]
-        no_controle_jx = self._posicao_no_controle
-        ganho = self.valor
-
-        Gn[no_mais, no_controle_jx] -= ganho
-        Gn[no_menos, no_controle_jx] += ganho
+        Gn[self._posicao_nos[0], self._nos_mod[0]] -= self.valor
+        Gn[self._posicao_nos[1], self._nos_mod[0]] += self.valor
+        Gn[self._posicao_nos[2], self._nos_mod[0]] += 1
+        Gn[self._posicao_nos[3], self._nos_mod[0]] -= 1
+        Gn[self._nos_mod[0], self._posicao_nos[2]] -= 1
+        Gn[self._nos_mod[0], self._posicao_nos[3]] += 1
        
         return Gn, I
-
-
 
 # corrente controlada por tensao
 class FonteCorrenteTensao(Componente):
