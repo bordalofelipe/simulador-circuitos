@@ -802,46 +802,36 @@ class Mosfet(Componente):
     _num_nos = 3 # Dreno, Porta, Fonte
     _num_nos_mod = 0
     _linear = False
-    _parametros = ['W', 'L', 'K', 'Vth']
 
-    def __init__(self, name: str, nos: list[str], args: list):
+    def __init__(self, name: str, nos: list[str], tipo: str, W: float, L: float, lbda: float, K: float, Vth: float):
         '''!
         @brief Construtor do MOSFET.
         @param name Nome do componente.
         @param nos Lista de nós no formato ['D', 'G', 'S'].
-        @param args Lista de argumentos contendo tipo e parâmetros W, L, K, Vth.
+        @param W parâmetro W do MOSFET.
+        @param L parâmetro L do MOSFET.
+        @param lbda parâmetro lambda do MOSFET.
+        @param K parâmetro K do MOSFET.
+        @param Vth parâmetro Vth (tensão) do MOSFET.
         '''
         super().__init__(name, nos)
-        self.tipo = args[0].upper()
-        if self.tipo not in ['NMOS', 'PMOS']:
-            raise ValueError(f"Tipo de MOSFET inválido '{self.tipo}' para o componente '{self.name}'. Use 'NMOS' ou 'PMOS'.")
-       
-        # Parse dos parâmetros W, L, K, Vth
-        params = {}
-        for arg in args[1:]:
-            try:
-                key, value = arg.split('=')
-                params[key.upper()] = float(value)
-            except ValueError:
-                raise ValueError(f"Argumento inválido para o MOSFET '{self.name}': '{arg}'")
-
-        try:
-            self.W = params['W']
-            self.L = params['L']
-            self.K = params['K']
-            self.Vth = params['VTH']
-        except KeyError as e:
-            raise KeyError(f"Parâmetro {e} faltando para o MOSFET '{self.name}'.")
-
+        self.tipo = tipo
+        self.W = W
+        self.L = L
+        self.K = K
+        self.Vth = Vth
+        self.lbda = lbda
         # Beta é a constante de ganho do transistor
         self.beta = self.K * (self.W / self.L)
 
     def __str__(self):
+        
         '''!
-        @brief Retorna representação do componente como linha da netlist.
+        @brief Retorna representação do MOSFET como linha da netlist
+        @return String no formato "M<nome> <nó-drain> <nó-gate> <nó-source> <tipo> <W> <L> <lambda> <K> <Vth>"
+        @details Formato específico para MOSFET tipo P ou tipo N.
         '''
-        params_str = f"W={self.W} L={self.L} K={self.K} Vth={self.Vth}"
-        return f'M{self.name} {" ".join(self.nos)} {self.tipo} {params_str}'
+        return 'M' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + self.tipo + ' ' + str(self.W) + ' ' + str(self.L) + ' ' + str(self.lbda) + ' ' + str(self.K) + ' ' + str(self.Vth)
 
     def estampaBE(self, Gn, I, t, tensoes):
         '''!
@@ -863,7 +853,7 @@ class Mosfet(Componente):
         gm = 0.0
         gds = 1e-9 # Condutância pequena para evitar matriz singular
 
-        if self.tipo == 'NMOS':
+        if self.tipo == 'N':
             vgs = vg - vs
             vds = vd - vs
             vth = self.Vth
@@ -902,7 +892,7 @@ class Mosfet(Componente):
             I[d] -= ieq
             I[s] += ieq
 
-        elif self.tipo == 'PMOS':
+        elif self.tipo == 'P':
             vsg = vs - vg
             vsd = vs - vd
             vth = abs(self.Vth) # Vth do PMOS é negativo, mas usamos seu módulo nas fórmulas
