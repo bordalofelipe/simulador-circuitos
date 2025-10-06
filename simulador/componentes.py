@@ -504,32 +504,102 @@ class FonteTensaoTensao(Componente):
         return Gn, I
 
 # corrente controlada por corrente
+# class FonteCorrenteCorrente(Componente):
+#     '''!
+#     @brief Esta classe implementa a Fonte de corrente controlada por corrente e sua estampa
+#     '''
+#     _linear = True
+#     _num_nos = 4
+#     _num_nos_mod = 1
+#     def __init__(self, name: str, nos: list[str], valor: float):
+#         '''!
+#         @brief Construtor da Fonte de corrente controlada por corrente
+#         @param nos [no_mais, no_menos] nos da fonte
+#         @param valor ganho
+#         '''
+#         super().__init__(name, nos)
+#         self.valor = valor
+
+#     def __str__(self):
+#         '''!
+#         @brief Retorna representação da fonte como linha da netlist
+#         @return String no formato "F<nome> <nó_saída_pos> <nó_saída_neg> <nó_controle_pos> <nó_controle_neg> <ganho>"
+#         @details Formato compatível com SPICE para fonte de tensão controlada por tensão.
+#         '''
+#         return 'F' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
+
+#     def estampaBE(self, Gn, I, t, tensoes):
+#         return Gn, I
 class FonteCorrenteCorrente(Componente):
     '''!
-    @brief Esta classe implementa a Fonte de corrente controlada por corrente e sua estampa
+    @brief Fonte de Corrente Controlada por Corrente (F)
+    @details A corrente de saída entre os nós é uma função da corrente que flui
+    através de uma fonte de tensão de controle.
+    Netlist: F<nome> <nó_saida+> <nó_saida-> <V_controle> <ganho>
+    A estampa adiciona o ganho (A) na matriz Gn, acoplando a corrente de saída
+    à corrente da fonte de tensão de controle (jx).
     '''
-    _linear = True
-    _num_nos = 4
-    _num_nos_mod = 1
-    def __init__(self, name: str, nos: list[str], valor: float):
+    _num_nos = 3  # [nó_saida+, nó_saida-, V_controle_nome]
+    _num_nos_mod = 0
+    _unidade = 'A/A'
+    _posicao_no_controle = -1 # Índice da variável de corrente de controle
+
+    def __init__(self, name: str, nos: list[str], args: list):
         '''!
-        @brief Construtor da Fonte de corrente controlada por corrente
-        @param nos [no_mais, no_menos] nos da fonte
-        @param valor ganho
+        @brief Construtor da Fonte de Corrente Controlada por Corrente
+        @param name Nome do componente
+        @param nos Lista de nós no formato ['nó_saida+', 'nó_saida-', 'V_controle']
+        @param args Lista de argumentos, contendo o ganho de corrente
         '''
-        super().__init__(name, nos)
-        self.valor = valor
+        # O terceiro "nó" é na verdade o nome da fonte de tensão de controle
+        self.fonte_controle = nos[2]
+        # A classe base só deve receber os nós elétricos reais
+        super().__init__(name, nos[:2])
+        self.valor = float(args[0])
 
     def __str__(self):
         '''!
-        @brief Retorna representação da fonte como linha da netlist
-        @return String no formato "F<nome> <nó_saída_pos> <nó_saída_neg> <nó_controle_pos> <nó_controle_neg> <ganho>"
-        @details Formato compatível com SPICE para fonte de tensão controlada por tensão.
+        @brief Retorna representação do componente como linha da netlist
         '''
-        return 'F' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
+        # Recria a lista de nós original para a string de saída
+        nos_originais = self.nos + [self.fonte_controle]
+        return f'F{self.name} {" ".join(nos_originais)} {self.valor}'
+
+    def vincular_variaveis_controle(self, mapa_variaveis: dict):
+        '''!
+        @brief Encontra e armazena o índice da variável de corrente de controle.
+        @param mapa_variaveis Dicionário que mapeia nomes de componentes (fontes V)
+        aos seus índices de variáveis de corrente.
+        @details Este método deve ser chamado pelo simulador uma vez antes do início
+        da análise para vincular este componente à variável que o controla.
+        '''
+        if self.fonte_controle in mapa_variaveis:
+            self._posicao_no_controle = mapa_variaveis[self.fonte_controle]
+        else:
+            raise ValueError(f"Fonte de tensão de controle '{self.fonte_controle}' não encontrada para o componente '{self.name}'.")
 
     def estampaBE(self, Gn, I, t, tensoes):
+        '''!
+        @brief Gera a estampa do componente para o método de Euler para trás.
+        @details A corrente entre no_mais e no_menos é 'ganho * jx', onde jx é a
+        corrente que flui pela fonte de tensão de controle.
+        KCL @ no_mais: ... - ganho * jx = 0  => Gn[no_mais, jx] -= ganho
+        KCL @ no_menos: ... + ganho * jx = 0 => Gn[no_menos, jx] += ganho
+        '''
+        if self._posicao_no_controle == -1:
+            raise RuntimeError(f"Variável de controle para '{self.name}' não foi vinculada antes da simulação.")
+
+        no_mais = self._posicao_nos[0]
+        no_menos = self._posicao_nos[1]
+        no_controle_jx = self._posicao_no_controle
+        ganho = self.valor
+
+        Gn[no_mais, no_controle_jx] -= ganho
+        Gn[no_menos, no_controle_jx] += ganho
+       
         return Gn, I
+
+
 
 # corrente controlada por tensao
 class FonteCorrenteTensao(Componente):
@@ -720,13 +790,158 @@ class AmpOp(Componente):
 
 class Mosfet(Componente):
     '''!
-    @brief Esta classe implementa o transistor MOSFET e sua estampa
+    @brief Transistor MOSFET (nível 1).
+    @details Componente não linear de 3 terminais (Dreno, Porta, Fonte).
+    Seu comportamento é dividido em três regiões: corte, triodo e saturação.
+    A estampa é baseada no modelo companheiro do componente, que consiste
+    em uma fonte de corrente controlada por tensão (Gm*Vgs), uma condutância
+    de saída (Gds) e uma fonte de corrente equivalente (Ieq) para linearizar
+    o comportamento em torno do ponto de operação atual.
+    Netlist: M<nome> <nó_D> <nó_G> <nó_S> <tipo> W=<val> L=<val> K=<val> Vth=<val>
     '''
-    def __init__(self):
+    _num_nos = 3 # Dreno, Porta, Fonte
+    _num_nos_mod = 0
+    _linear = False
+    _parametros = ['W', 'L', 'K', 'Vth']
+
+    def __init__(self, name: str, nos: list[str], args: list):
         '''!
-        @brief Construtor do Mosfet
+        @brief Construtor do MOSFET.
+        @param name Nome do componente.
+        @param nos Lista de nós no formato ['D', 'G', 'S'].
+        @param args Lista de argumentos contendo tipo e parâmetros W, L, K, Vth.
         '''
-        raise NotImplementedError
+        super().__init__(name, nos)
+        self.tipo = args[0].upper()
+        if self.tipo not in ['NMOS', 'PMOS']:
+            raise ValueError(f"Tipo de MOSFET inválido '{self.tipo}' para o componente '{self.name}'. Use 'NMOS' ou 'PMOS'.")
+       
+        # Parse dos parâmetros W, L, K, Vth
+        params = {}
+        for arg in args[1:]:
+            try:
+                key, value = arg.split('=')
+                params[key.upper()] = float(value)
+            except ValueError:
+                raise ValueError(f"Argumento inválido para o MOSFET '{self.name}': '{arg}'")
+
+        try:
+            self.W = params['W']
+            self.L = params['L']
+            self.K = params['K']
+            self.Vth = params['VTH']
+        except KeyError as e:
+            raise KeyError(f"Parâmetro {e} faltando para o MOSFET '{self.name}'.")
+
+        # Beta é a constante de ganho do transistor
+        self.beta = self.K * (self.W / self.L)
+
+    def __str__(self):
+        '''!
+        @brief Retorna representação do componente como linha da netlist.
+        '''
+        params_str = f"W={self.W} L={self.L} K={self.K} Vth={self.Vth}"
+        return f'M{self.name} {" ".join(self.nos)} {self.tipo} {params_str}'
+
+    def estampaBE(self, Gn, I, t, tensoes):
+        '''!
+        @brief Gera a estampa do MOSFET para o método de Euler para trás.
+        @details Utiliza as tensões da iteração anterior de Newton-Raphson
+        para calcular a região de operação e os parâmetros do modelo companheiro.
+        '''
+        d = self._posicao_nos[0]
+        g = self._posicao_nos[1]
+        s = self._posicao_nos[2]
+
+        # Tensões da iteração anterior de Newton-Raphson
+        vd = tensoes[d]
+        vg = tensoes[g]
+        vs = tensoes[s]
+
+        # Inicializa parâmetros do modelo companheiro
+        i_d = 0.0
+        gm = 0.0
+        gds = 1e-9 # Condutância pequena para evitar matriz singular
+
+        if self.tipo == 'NMOS':
+            vgs = vg - vs
+            vds = vd - vs
+            vth = self.Vth
+
+            if vgs <= vth:
+                # Região de Corte
+                pass # i_d, gm, gds já são zero (ou próximo)
+            elif vds < (vgs - vth):
+                # Região de Triodo
+                i_d = self.beta * ((vgs - vth) * vds - 0.5 * vds**2)
+                gm = self.beta * vds
+                gds = self.beta * (vgs - vth - vds)
+            else: # vds >= (vgs - vth)
+                # Região de Saturação
+                i_d = 0.5 * self.beta * (vgs - vth)**2
+                gm = self.beta * (vgs - vth)
+                gds = 0.0
+
+            # Fonte de corrente equivalente do modelo companheiro
+            ieq = i_d - gm * vgs - gds * vds
+           
+            # Estampa do modelo companheiro (VCCS + Gds + Ieq)
+            # Contribuição de Gds (resistor entre Dreno e Fonte)
+            Gn[d, d] += gds
+            Gn[d, s] -= gds
+            Gn[s, d] -= gds
+            Gn[s, s] += gds
+           
+            # Contribuição de Gm (fonte de corrente D->S controlada por Vgs)
+            Gn[d, g] += gm
+            Gn[d, s] -= gm
+            Gn[s, g] -= gm
+            Gn[s, s] += gm
+           
+            # Contribuição da fonte de corrente Ieq
+            I[d] -= ieq
+            I[s] += ieq
+
+        elif self.tipo == 'PMOS':
+            vsg = vs - vg
+            vsd = vs - vd
+            vth = abs(self.Vth) # Vth do PMOS é negativo, mas usamos seu módulo nas fórmulas
+
+            if vsg <= vth:
+                # Região de Corte
+                pass # i_d, gm, gds já são zero
+            elif vsd < (vsg - vth):
+                # Região de Triodo
+                i_d = self.beta * ((vsg - vth) * vsd - 0.5 * vsd**2)
+                gm = self.beta * vsd
+                gds = self.beta * (vsg - vth - vsd)
+            else: # vsd >= (vsg - vth)
+                # Região de Saturação
+                i_d = 0.5 * self.beta * (vsg - vth)**2
+                gm = self.beta * (vsg - vth)
+                gds = 0.0
+
+            # i_d calculado é a corrente S->D. Ieq também é S->D.
+            ieq = i_d - gm * vsg - gds * vsd
+           
+            # Estampa do modelo companheiro para PMOS
+            # Contribuição de Gds (resistor entre Fonte e Dreno)
+            Gn[s, s] += gds
+            Gn[s, d] -= gds
+            Gn[d, s] -= gds
+            Gn[d, d] += gds
+           
+            # Contribuição de Gm (fonte de corrente S->D controlada por Vsg)
+            Gn[s, g] -= gm
+            Gn[s, s] += gm
+            Gn[d, g] += gm
+            Gn[d, s] -= gm
+           
+            # Contribuição da fonte de corrente Ieq (S->D)
+            I[s] -= ieq
+            I[d] += ieq
+           
+        return Gn, I
 
 class FonteCorrente(Componente):
     '''!
