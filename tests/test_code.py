@@ -41,7 +41,13 @@ def test_lc():
     check_netlist('tests/lc.net')
 
 def test_mosfet_curve():
-    pass
+    c = simulador.Circuito('.TRAN', 0.1, 1e-5, 'BE', 1)
+    c.append(simulador.FonteTensao('483502', ['1', '0'], ['PULSE', '0', '15', '0', '0.1', '0', '0', '1', '1']))
+    c.append(simulador.FonteTensao('483503', ['2', '0'], ['DC', '7']))
+    c.append(simulador.Mosfet('9913', ['1', '2', '3'], 'N', 1.9999999999999998e-05, 1e-06, 0.01, 9.999999999999999e-05, 0.5))
+    c.append(simulador.Resistor('1026', ['3', '0'], 1))
+    c.export('tests/mosfet_curve.net.test')
+    check_netlist('tests/mosfet_curve.net')
 
 def test_oscilator():
     c = simulador.Circuito('.TRAN', 0.05, 1e-06, 'BE', 1)
