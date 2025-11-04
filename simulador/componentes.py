@@ -9,6 +9,13 @@ class Componente():
     
     A classe utiliza análise nodal modificada para resolver circuitos, onde cada componente
     contribui com sua estampa para as matrizes de condutância (Gn) e corrente (I).
+
+    @var _linear
+        Flag indicando se o componente é linear.
+    @var _num_nos
+        Número de nós do componente.
+    @var _num_nos_mod
+        Número de nós modificados.
     
     @author Equipe do Simulador de Circuitos
     @date 2025
@@ -170,9 +177,8 @@ class Resistor(Componente):
     '''!
     @brief Representa um resistor linear no circuito
     @details O resistor é um componente linear que obedece à lei de Ohm: V = R*I.
-    Sua estampa na análise nodal é bem definida e não depende do método de integração.
     
-    @image html resistor_stamp.png "Estampa do Resistor"
+    @image html resistor.png "Resistor"
     '''
     _linear = True
     _num_nos = 2
@@ -182,10 +188,9 @@ class Resistor(Componente):
         '''!
         @brief Construtor do resistor
         @param name Nome único do resistor
-        @param nos Lista com dois nós: [nó_positivo, nó_negativo]
+        @param nos Lista com dois nós: [nó_1, nó_2]
         @param valor Resistência em ohms
         @details O resistor conecta dois nós e tem uma resistência específica.
-        A corrente flui do nó positivo para o nó negativo.
         '''
         super().__init__(name, nos)
         self.valor = valor
@@ -193,7 +198,7 @@ class Resistor(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação do resistor como linha da netlist
-        @return String no formato "R<nome> <nó1> <nó2> <valor>"
+        @return String no formato "R<nome> <nó_1> <nó_2> <valor>"
         @details Formato compatível com SPICE para resistor.
         '''
         return 'R' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
@@ -212,10 +217,14 @@ class Resistor(Componente):
         - Gn[j,i] -= 1/R
         - Gn[j,j] += 1/R
         '''
-        Gn[self._posicao_nos[0], self._posicao_nos[0]] += 1/self.valor
-        Gn[self._posicao_nos[0], self._posicao_nos[1]] -= 1/self.valor
-        Gn[self._posicao_nos[1], self._posicao_nos[0]] -= 1/self.valor
-        Gn[self._posicao_nos[1], self._posicao_nos[1]] += 1/self.valor
+        no_1 = self._posicao_nos[0]
+        no_2 = self._posicao_nos[1]
+
+        Gn[no_1, no_1] += 1/self.valor
+        Gn[no_1, no_2] -= 1/self.valor
+        Gn[no_2, no_1] -= 1/self.valor
+        Gn[no_2, no_2] += 1/self.valor
+
         return Gn, I
 
 class Indutor(Componente):
@@ -230,12 +239,12 @@ class Indutor(Componente):
     _linear = True
     _num_nos = 2
     _num_nos_mod = 1
-    
+
     def __init__(self, name: str, nos: list[str], valor: float, ic=0.0):
         '''!
         @brief Construtor do indutor
         @param name Nome único do indutor
-        @param nos Lista com dois nós: [nó_positivo, nó_negativo]
+        @param nos Lista com dois nós: [nó_pos, nó_neg]
         @param valor Indutância em henrys (H)
         @param ic Corrente inicial no indutor (padrão: 0.0 A)
         @details O indutor conecta dois nós e tem uma indutância específica.
@@ -249,7 +258,7 @@ class Indutor(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação do indutor como linha da netlist
-        @return String no formato "L<nome> <nó1> <nó2> <valor> [IC=<corrente_inicial>]"
+        @return String no formato "L<nome> <nó_pos> <nó_neg> <valor> [IC=<corrente_inicial>]"
         @details Formato compatível com SPICE para indutor.
         '''
         if self.ic != 0.0:
@@ -271,7 +280,7 @@ class Indutor(Componente):
         - Equação da corrente do indutor
         - Termo histórico da corrente anterior
         '''
-        
+
         # Equação da tensão: V1 - V2 = L * di/dt
         # Com Backward Euler: V1 - V2 = L * (i(t+Δt) - i(t))/Δt
         # Rearranjando: V1 - V2 - L/Δt * i(t+Δt) = -L/Δt * i(t)
@@ -379,7 +388,7 @@ class ResistorNaoLinear(Componente):
         '''!
         @brief Construtor do resistor não linear
         @param name Nome único do resistor
-        @param nos Lista com dois nós: [nó_positivo, nó_negativo]
+        @param nos Lista com dois nós: [nó_pos, nó_neg]
         @param v1 Tensão do primeiro ponto (V)
         @param i1 Corrente do primeiro ponto (A)
         @param v2 Tensão do segundo ponto (V)
@@ -410,7 +419,7 @@ class ResistorNaoLinear(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação do resistor não linear como linha da netlist
-        @return String no formato "N<nome> <nó1> <nó2> <v1> <i1> <v2> <i2> <v3> <i3> <v4> <i4>"
+        @return String no formato "N<nome> <nó_pos> <nó_neg> <v1> <i1> <v2> <i2> <v3> <i3> <v4> <i4>"
         @details Formato específico para resistor não linear com 4 pontos.
         '''
         return 'N' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.v1) + ' ' + str(self.i1) + ' ' + str(self.v2) + ' ' + str(self.i2) + ' ' + str(self.v3) + ' ' + str(self.i3) + ' ' + str(self.v4) + ' ' + str(self.i4)
@@ -468,7 +477,7 @@ class FonteTensaoTensao(Componente):
         '''!
         @brief Construtor da fonte de tensão controlada por tensão
         @param name Nome único da fonte
-        @param nos Lista com quatro nós: [nó_saída_pos, nó_saída_neg, nó_controle_pos, nó_controle_neg]
+        @param nos Lista com os nomes dos quatro nós: [nó_saída_pos, nó_saída_neg, nó_controle_pos, nó_controle_neg]
         @param valor Ganho de tensão (adimensional)
         @details A fonte conecta quatro nós: dois para a saída e dois para o controle.
         O ganho determina a relação entre tensão de entrada e saída.
@@ -495,22 +504,19 @@ class FonteTensaoTensao(Componente):
         @details A estampa implementa a relação Vout = A * Vin usando um nó extra
         para representar a corrente da fonte de tensão.
         '''
-        # Nó extra para corrente da fonte de tensão
+        no_saida_pos = self._posicao_nos[0]
+        no_saida_neg = self._posicao_nos[1]
+        no_controle_pos = self._posicao_nos[2]
+        no_controle_neg = self._posicao_nos[3]
+
         no_corrente = self._nos_mod[0]
         
-        # Equação da tensão de saída: Vout = A * Vin
-        # V1 - V2 = A * (V3 - V4)
-        # Rearranjando: V1 - V2 - A*V3 + A*V4 = 0
-        
-        # Contribuições para a equação da tensão
-        Gn[self._posicao_nos[0], no_corrente] += 1  # V1
-        Gn[self._posicao_nos[1], no_corrente] -= 1  # V2
-
-        # Equação da corrente da fonte
-        Gn[no_corrente, self._posicao_nos[2]] += self.valor  # A*V3
-        Gn[no_corrente, self._posicao_nos[3]] -= self.valor  # A*V4
-        Gn[no_corrente, self._posicao_nos[0]] -= 1
-        Gn[no_corrente, self._posicao_nos[1]] += 1
+        Gn[no_saida_pos, no_corrente] += 1
+        Gn[no_saida_neg, no_corrente] -= 1
+        Gn[no_corrente, no_controle_pos] += self.valor
+        Gn[no_corrente, no_controle_neg] -= self.valor
+        Gn[no_corrente, no_saida_pos] -= 1
+        Gn[no_corrente, no_saida_neg] += 1
         
         return Gn, I
         
@@ -531,7 +537,7 @@ class FonteCorrenteCorrente(Componente):
     def __init__(self, name: str, nos: list[str], valor: float):
         '''!
         @brief Construtor da Fonte de corrente controlada por corrente
-        @param nos [no_mais, no_menos] nos da fonte
+        @param nos Lista com os nomes dos quatro nós: [nó_saída_pos, nó_saída_neg, nó_controle_pos, nó_controle_neg]
         @param valor ganho
         '''
         super().__init__(name, nos)
@@ -553,12 +559,19 @@ class FonteCorrenteCorrente(Componente):
         KCL @ no_mais: ... - ganho * jx = 0  => Gn[no_mais, jx] -= ganho
         KCL @ no_menos: ... + ganho * jx = 0 => Gn[no_menos, jx] += ganho
         '''
-        Gn[self._posicao_nos[0], self._nos_mod[0]] -= self.valor
-        Gn[self._posicao_nos[1], self._nos_mod[0]] += self.valor
-        Gn[self._posicao_nos[2], self._nos_mod[0]] += 1
-        Gn[self._posicao_nos[3], self._nos_mod[0]] -= 1
-        Gn[self._nos_mod[0], self._posicao_nos[2]] -= 1
-        Gn[self._nos_mod[0], self._posicao_nos[3]] += 1
+        no_saida_pos = self._posicao_nos[0]
+        no_saida_neg = self._posicao_nos[1]
+        no_controle_pos = self._posicao_nos[2]
+        no_controle_neg = self._posicao_nos[3]
+        
+        no_corrente = self._nos_mod[0]
+
+        Gn[no_saida_pos, no_corrente] -= self.valor
+        Gn[no_saida_neg, no_corrente] += self.valor
+        Gn[no_controle_pos, no_corrente] += 1
+        Gn[no_controle_neg, no_corrente] -= 1
+        Gn[no_corrente, no_controle_pos] -= 1
+        Gn[no_corrente, no_controle_neg] += 1
        
         return Gn, I
 
@@ -573,7 +586,7 @@ class FonteCorrenteTensao(Componente):
     def __init__(self, name: str, nos: list[str], valor: float):
         '''!
         @brief Construtor da Fonte de corrente controlada por tensao
-        @param nos [no_mais, no_menos] nos da fonte
+        @param nos Lista com os nomes dos quatro nós: [nó_saída_pos, nó_saída_neg, nó_controle_pos, nó_controle_neg]
         @param valor ganho
         '''
         super().__init__(name, nos)
@@ -597,12 +610,15 @@ class FonteCorrenteTensao(Componente):
         @return Tupla (Gn, I) com as matrizes atualizadas
         @details A estampa implementa a relação Iout = G * Vin
         '''
-        # Equação da corrente: Iout = G * (V3 - V4)
-        # Contribuições para os nós de saída
-        Gn[self._posicao_nos[0], self._posicao_nos[2]] += self.valor  # +G*V3
-        Gn[self._posicao_nos[0], self._posicao_nos[3]] -= self.valor  # -G*V4
-        Gn[self._posicao_nos[1], self._posicao_nos[2]] -= self.valor  # -G*V3
-        Gn[self._posicao_nos[1], self._posicao_nos[3]] += self.valor  # +G*V4
+        no_saida_pos = self._posicao_nos[0]
+        no_saida_neg = self._posicao_nos[1]
+        no_controle_pos = self._posicao_nos[2]
+        no_controle_neg = self._posicao_nos[3]
+
+        Gn[no_saida_pos, no_controle_pos] += self.valor
+        Gn[no_saida_pos, no_controle_neg] -= self.valor
+        Gn[no_saida_neg, no_controle_pos] -= self.valor
+        Gn[no_saida_neg, no_controle_neg] += self.valor
         
         return Gn, I
 
@@ -617,7 +633,7 @@ class FonteTensaoCorrente(Componente):
     def __init__(self, name: str, nos: list[str], valor: float):
         '''!
         @brief Construtor da Fonte de tensao controlada por corrente
-        @param nos [no_mais, no_menos] nos da fonte
+        @param nos Lista com os nomes dos quatro nós: [nó_saída_pos, nó_saída_neg, nó_controle_pos, nó_controle_neg]
         @param valor ganho
         '''
         super().__init__(name, nos)
@@ -642,27 +658,24 @@ class FonteTensaoCorrente(Componente):
         @details A estampa implementa a relação Vout = H * Vin usando dois nós extra
         para representar a corrente da fonte de tensão e do nó de controle.
         '''
-        # Nós extras para as variáveis auxiliares
-        no_jx = self._nos_mod[0]  # jx
-        no_jy = self._nos_mod[1]  # jy
+        no_saida_pos = self._posicao_nos[0]
+        no_saida_neg = self._posicao_nos[1]
+        no_controle_pos = self._posicao_nos[2]
+        no_controle_neg = self._posicao_nos[3]
+
+        no_corrente1 = self._nos_mod[0]  
+        no_corrente2 = self._nos_mod[1]  
         
-        # Equação da tensão de saída: Vout = Rm * Iin
-        # V1 - V2 = Rm * (corrente de controle)
-        
-        # Contribuições para a equação da tensão
-        Gn[self._posicao_nos[0], no_jx] -= 1  # V1
-        Gn[self._posicao_nos[1], no_jx] += 1  # V2
-        Gn[self._posicao_nos[2], no_jy] -= 1  # V3
-        Gn[self._posicao_nos[3], no_jy] += 1  # V4
-        
-        # Equação da corrente jx
-        Gn[no_jx, self._posicao_nos[0]] += 1
-        Gn[no_jx, self._posicao_nos[1]] -= 1
-        
-        # Equação da corrente jy
-        Gn[no_jy, self._posicao_nos[2]] += 1
-        Gn[no_jy, self._posicao_nos[3]] -= 1
-        Gn[no_jy, no_jx] += self.valor
+                
+        Gn[no_saida_pos, no_corrente1] -= 1
+        Gn[no_saida_neg, no_corrente1] += 1
+        Gn[no_controle_pos, no_corrente2] -= 1
+        Gn[no_controle_neg, no_corrente2] += 1
+        Gn[no_corrente1, no_saida_pos] += 1
+        Gn[no_corrente1, no_saida_neg] -= 1
+        Gn[no_corrente2, no_controle_pos] += 1
+        Gn[no_corrente2, no_controle_neg] -= 1
+        Gn[no_corrente2, no_corrente1] += self.valor
         
         return Gn, I
 
@@ -774,7 +787,6 @@ class Mosfet(Componente):
     em uma fonte de corrente controlada por tensão (Gm*Vgs), uma condutância
     de saída (Gds) e uma fonte de corrente equivalente (Ieq) para linearizar
     o comportamento em torno do ponto de operação atual.
-    Netlist: M<nome> <nó_D> <nó_G> <nó_S> <tipo> W=<val> L=<val> K=<val> Vth=<val>
     '''
     _num_nos = 3 # Dreno, Porta, Fonte
     _num_nos_mod = 0
