@@ -19,7 +19,7 @@ def check_tolerances(filename):
         total_samples += 1
     total_error /= total_samples
     print(filename, f'teve erro médio de {total_error}')
-    assert total_error < 10
+    assert total_error < 0.01
 
 def test_chua():
     netlist('chua.net')
@@ -36,6 +36,10 @@ def test_lc():
 def test_mosfet_curve():
     netlist('mosfet_curve.net')
     check_tolerances('mosfet_curve.sim')
+
+def test_opamp_rectifier():
+    netlist('opamp_rectifier.net')
+    check_tolerances('opamp_rectifier.sim')
 
 def test_oscilator():
     netlist('oscilator.net')

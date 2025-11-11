@@ -49,6 +49,23 @@ def test_mosfet_curve():
     c.export('tests/mosfet_curve.net.test')
     check_netlist('tests/mosfet_curve.net')
 
+def test_opamp_rectifier():
+    c = simulador.Circuito('.TRAN', 0.004, 1e-06, 'BE', 1)
+    c.append(simulador.FonteTensao('2000', ['1', '0'], ['SIN', '0', '2.5', '1000', '0.0', '0', '0', '4']))
+    c.append(simulador.Resistor('1006', ['1', '2'], 1000.0))
+    c.append(simulador.AmpOp('9901', ['0', '2', '3']))
+    c.append(simulador.Resistor('1007', ['2', '4'], 1000.0))
+    c.append(simulador.Diodo('1201', ['4', '3']))
+    c.append(simulador.Diodo('1202', ['3', '5']))
+    c.append(simulador.Resistor('1008', ['5', '2'], 1000.0))
+    c.append(simulador.Resistor('1009', ['4', '6'], 1000.0))
+    c.append(simulador.AmpOp('9902', ['5', '6', '7']))
+    c.append(simulador.Resistor('1010', ['6', '7'], 1000.0))
+    c.append(simulador.Resistor('1011', ['7', '0'], 100000.0))
+    c.append(simulador.Capacitor('2006', ['7', '0'], 9.999999999999999e-05))
+    c.export('tests/opamp_rectifier.net.test')
+    check_netlist('tests/opamp_rectifier.net')
+
 def test_oscilator():
     c = simulador.Circuito('.TRAN', 0.05, 1e-06, 'BE', 1)
     c.append(simulador.Resistor('1012', ['1', '2'], 51000.0))
