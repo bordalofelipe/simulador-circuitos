@@ -56,6 +56,69 @@ class Circuito():
         if not hasGround:
             raise Exception('Circuito sem no terra')
 
+    # def run(self):
+    #     self.__popular_nos()
+    #     print('Circuito com ' + str(self.__nos) + ' nos')
+    #     nao_linear = False
+    #     for com in self.__componentes: # aloca cada no para cada componente
+    #         if not com.linear:
+    #             nao_linear = True
+    #         com.set_posicao_nos([self.__nos.index(item) for item in com.nos])
+    #         ## Analise modificada
+    #         print(str(com) + ' precisa de ' + str(com.num_nos_mod) + ' nos extras. Alocando nos: ', end=' ')
+    #         com.set_nos_mod([len(self.__nos) + i for i in range(com.num_nos_mod)]) # informa indices
+    #         print(com._nos_mod)
+    #         for i in range(com.num_nos_mod): # adiciona nos modificados na lista de todos os nos
+    #             #self.__nos.append('mod' + str(len(self.__nos)))
+    #             self.__nos.append('J' + str(len(self.__nos)) + str(com).split(' ')[0]) # sintaxe moreirao
+    #     print('Circuito final com ' + str(len(self.__nos)) + ' nos')
+    #     if nao_linear:
+    #         print('Analise nao linear necessaria')
+    #     resultado = Resultado(self.__nos[1:], [], []) # pula o no terra
+    #     tempo = 0
+    #     while tempo < self.tempo_total:
+    #         matrizGn = np.zeros((len(self.__nos), len(self.__nos)))#, dtype=np.complex64)
+    #         matrizI = np.zeros(len(self.__nos))#, dtype=np.complex64)
+    #         passo_interno = 0
+    #         if tempo == 0:
+    #             passo = self.passo/self.fator_de_passo
+    #         else:
+    #             passo = self.passo
+    #         passo = self.passo
+    #         while passo_interno < self.passo_interno:
+    #             if len(resultado) == 0:
+    #                 previous = [0.0 for i in range(len(self.__nos))]
+    #             else:
+    #                 previous = resultado[-1][1] # resultado[i] = (tempo, [tensoes])
+    #             while True:
+    #                 '''Parte que testa que nao converge'''
+    #                 matrizGn = np.zeros((len(self.__nos), len(self.__nos)))#, dtype=np.complex64)
+    #                 matrizI = np.zeros((len(self.__nos), 1))#, dtype=np.complex64)
+    #                 for com in self.__componentes:
+    #                     com.passo = self.passo
+    #                     if self.tipo_simulacao == 'BE':
+    #                         matrizGn, matrizI = com.estampaBE(matrizGn, matrizI, tempo, previous)
+    #                     elif self.tipo_simulacao == 'FE':
+    #                         matrizGn, matrizI = com.estampaFE(matrizGn, matrizI, tempo, previous)
+    #                     elif self.tipo_simulacao == 'TRAP':
+    #                         matrizGn, matrizI = com.estampaTrap(matrizGn, matrizI, tempo, previous)
+    #                 print(self.__nos)
+    #                 print(matrizGn, matrizI)
+    #                 tensoes = np.linalg.solve(matrizGn[1:,1:], matrizI[1:])
+    #                 tensoes = list(tensoes)
+    #                 tolerancia = [abs(i-j) for i, j in zip(tensoes, previous)]
+    #                 if nao_linear and max(tolerancia) > 0.001:
+    #                     previous = tensoes
+    #                 else:
+    #                     break
+    #                 '''Update all initial conditions (WTF)'''
+    #             passo_interno += 1
+    #         resultado.append(tempo, [i[0] for i in tensoes])
+    #         if round(tempo/self.tempo_total) % 10 == 0:
+    #             print(tempo, self.tempo_total)
+    #         tempo += passo
+    #     return resultado
+
     def run(self):
         self.__popular_nos()
         print('Circuito com ' + str(self.__nos) + ' nos')
@@ -71,52 +134,110 @@ class Circuito():
             for i in range(com.num_nos_mod): # adiciona nos modificados na lista de todos os nos
                 #self.__nos.append('mod' + str(len(self.__nos)))
                 self.__nos.append('J' + str(len(self.__nos)) + str(com).split(' ')[0]) # sintaxe moreirao
-        print('Circuito final com ' + str(len(self.__nos)) + ' nos')
+        
+        num_vars = len(self.__nos) - 1 # Número de variáveis (nós - 1, pois terra é 0)
+        print('Circuito final com ' + str(num_vars) + ' variaveis')
         if nao_linear:
             print('Analise nao linear necessaria')
+            
+        # --- Parâmetros do REQUISITO 3 (Análise no Tempo) ---
+        N_MAX = 50       # [cite: 73]
+        M_MAX = 100      # [cite: 77]
+        STEP_FACTOR = 1000 # [cite: 69]
+        TOLERANCIA = 0.001 # [cite: 75]
+        # ---
+        
         resultado = Resultado(self.__nos[1:], [], []) # pula o no terra
         tempo = 0
+        
         while tempo < self.tempo_total:
-            matrizGn = np.zeros((len(self.__nos), len(self.__nos)))#, dtype=np.complex64)
-            matrizI = np.zeros(len(self.__nos))#, dtype=np.complex64)
-            passo_interno = 0
-            '''if tempo == 0:
-                passo = self.passo/self.fator_de_passo
+            
+            # --- REQUISITO 3: Implementação do "Primeiro Passo"  ---
+            if tempo == 0:
+                passo = self.passo / STEP_FACTOR
             else:
-                passo = self.passo'''
-            passo = self.passo
-            while passo_interno < self.passo_interno:
+                passo = self.passo
+            # ---
+                
+            passo_interno_atual = 0
+            while passo_interno_atual < self.passo_interno:
+                
+                # Define o chute inicial (x(t)) para o Newton-Raphson
                 if len(resultado) == 0:
-                    previous = [0.0 for i in range(len(self.__nos))]
+                    # Chute inicial em t=0 [cite: 97]
+                    previous = np.zeros(num_vars)
                 else:
-                    previous = resultado[-1][1] # resultado[i] = (tempo, [tensoes])
-                while True:
-                    '''Parte que testa que nao converge'''
-                    matrizGn = np.zeros((len(self.__nos), len(self.__nos)))#, dtype=np.complex64)
-                    matrizI = np.zeros((len(self.__nos), 1))#, dtype=np.complex64)
+                    # Chute é o resultado anterior
+                    previous = np.array(resultado[-1][1]) # resultado[i] = (tempo, [tensoes])
+
+                # --- REQUISITO 3: Loop de Newton-Raphson (N, M) [cite: 71-79, 94-120] ---
+                stop_newton_raphson = False
+                n_guesses = 0
+                n_newton_raphson = 0
+                
+                while not stop_newton_raphson:
+                    
+                    # Verifica se estourou as N tentativas de N-R
+                    if nao_linear and n_newton_raphson >= N_MAX: # [cite: 72-73, 99]
+                        
+                        # Verifica se estourou as M tentativas de chutes aleatórios
+                        if n_guesses >= M_MAX: # [cite: 76-77]
+                            # 
+                            raise Exception(f"Simulação falhou em t={tempo}s. O sistema é impossível de ser solucionado após {M_MAX} tentativas aleatórias.")
+                        
+                        # Gera novo chute aleatório [cite: 72, 101]
+                        print(f"Aviso: Falha na convergência (N={N_MAX}). Gerando chute aleatório {n_guesses+1}/{M_MAX}.")
+                        previous = np.random.rand(num_vars) # [cite: 101]
+                        n_guesses += 1 # [cite: 102]
+                        n_newton_raphson = 0 # Reinicia a contagem de N-R
+
+                    # --- Montagem da Estampa (dentro do loop N-R) [cite: 104-112] ---
+                    matrizGn = np.zeros((len(self.__nos), len(self.__nos)))
+                    matrizI = np.zeros((len(self.__nos), 1))
+                    
                     for com in self.__componentes:
-                        com.passo = self.passo
+                        com.passo = passo # IMPORTANTE: Usar o 'passo' calculado (pode ser o passo menor)
+                        
+                        # As estampas não lineares usam 'previous' (o chute, x(t))
                         if self.tipo_simulacao == 'BE':
                             matrizGn, matrizI = com.estampaBE(matrizGn, matrizI, tempo, previous)
                         elif self.tipo_simulacao == 'FE':
                             matrizGn, matrizI = com.estampaFE(matrizGn, matrizI, tempo, previous)
                         elif self.tipo_simulacao == 'TRAP':
                             matrizGn, matrizI = com.estampaTrap(matrizGn, matrizI, tempo, previous)
-                    print(self.__nos)
-                    print(matrizGn, matrizI)
+                    
+                    # print(self.__nos)
+                    # print(matrizGn, matrizI)
+                    
+                    # Resolve o sistema Ax = b [cite: 113]
                     tensoes = np.linalg.solve(matrizGn[1:,1:], matrizI[1:])
-                    tensoes = list(tensoes)
-                    tolerancia = [abs(i-j) for i, j in zip(tensoes, previous)]
-                    if nao_linear and max(tolerancia) > 0.001:
-                        previous = tensoes
+                    tensoes = tensoes.flatten() # Garante que é um vetor 1D
+
+                    # --- Teste de Convergência [cite: 114, 116] ---
+                    if not nao_linear:
+                        stop_newton_raphson = True # [cite: 119-120]
                     else:
-                        break
-                    '''Update all initial conditions (WTF)'''
-                passo_interno += 1
-            resultado.append(tempo, [i[0] for i in tensoes])
-            if round(tempo/self.tempo_total) % 10 == 0:
-                print(tempo, self.tempo_total)
-            tempo += passo
+                        tolerancia = np.max(np.abs(tensoes - previous)) # [cite: 114]
+                        
+                        if tolerancia <= TOLERANCIA:
+                            stop_newton_raphson = True # Convergiu! [cite: 119-120]
+                        else:
+                            # Não convergiu, prepara próximo chute [cite: 117]
+                            previous = tensoes 
+                            n_newton_raphson += 1 # [cite: 118]
+                # --- Fim do loop Newton-Raphson ---
+
+                passo_interno_atual += 1
+            
+            # (Pseudocode lines 124-127)
+            resultado.append(tempo, list(tensoes)) # Armazena o resultado convergido [cite: 124]
+            
+            if round((tempo / self.tempo_total) * 100) % 10 == 0:
+                print(f"Simulação... {round((tempo / self.tempo_total) * 100)}%")
+            
+            tempo += passo # [cite: 127]
+            
+        print("Simulação concluída.")
         return resultado
 
     def export(self, filename: str):
@@ -151,7 +272,7 @@ def import_netlist(filename: str):
                 else:
                     componentes.append(Capacitor(c[0][1:], [c[1], c[2]], float(c[3])))
             elif tipo == 'N':
-                componentes.append(ResistorNaoLinear(c[0][1:], [c[1], c[2]], float(c[3]), float(c[4]), float(c[5]), float(c[6]), float(c[6]), float(c[7]), float(c[8]), float(c[9])))
+                componentes.append(ResistorNaoLinear(c[0][1:], [c[1], c[2]], float(c[3]), float(c[4]), float(c[5]), float(c[6]), float(c[7]), float(c[8]), float(c[9]), float(c[10])))
             elif tipo == 'E':
                 componentes.append(FonteTensaoTensao(c[0][1:], [c[1], c[2], c[3], c[4]], float(c[5])))
             elif tipo == 'F':

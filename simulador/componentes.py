@@ -94,7 +94,6 @@ class Componente():
         '''!
         @brief Processa argumentos de fontes de tensão ou corrente e coloca nos argumentos do objeto
         '''
-        print(self.nos, args)
         if args[0] == 'DC':
             self.tipo = 'DC'
             self.nivel_dc = float(args[1])
@@ -437,17 +436,18 @@ class ResistorNaoLinear(Componente):
         vab = tensoes[self._posicao_nos[0] - 1] - tensoes[self._posicao_nos[1] - 1]
         if vab > self.v3:
             g0 = (self.i4 - self.i3)/(self.v4 - self.v3)
-            i0 = self.i4 - self.v4
+            i0 = self.i4 - g0*self.v4
         elif vab > self.v2:
             g0 = (self.i3 - self.i2)/(self.v3 - self.v2)
-            i0 = self.i3 - self.v3
+            i0 = self.i3 - g0*self.v3
         else:
             g0 = (self.i2 - self.i1)/(self.v2 - self.v1)
-            i0 = self.i2 - self.v2
+            i0 = self.i2 - g0*self.v2
         
         self.condutancia.valor = 1/g0
         self.fonte.args = ['DC', i0]
-        self.fonte.calcular_valor_fonte(self.fonte.args)
+        # self.fonte.processa_argumentos_fonte(self.fonte.args)
+        self.fonte.nivel_dc = i0
 
         Gn, I = self.condutancia.estampaBE(Gn, I, t, tensoes)
         Gn, I = self.fonte.estampaBE(Gn, I, t, tensoes)
@@ -718,7 +718,7 @@ class Diodo(Componente):
 
         self.condutancia.valor = 1/g0
         self.fonte.args = ['DC', id]
-        self.fonte.calcular_valor_fonte(self.fonte.args)
+        self.fonte.processa_argumentos_fonte(self.fonte.args)
 
         Gn, I = self.condutancia.estampaBE(Gn, I, t, tensoes)
         Gn, I = self.fonte.estampaBE(Gn, I, t, tensoes)
