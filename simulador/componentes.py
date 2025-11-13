@@ -187,7 +187,7 @@ class Resistor(Componente):
         '''!
         @brief Construtor do resistor
         @param name Nome único do resistor
-        @param nos Lista com dois nós: [nó_1, nó_2]
+        @param nos Lista com dois nós: [nó_a, nó_b]
         @param valor Resistência em ohms
         @details O resistor conecta dois nós e tem uma resistência específica.
         '''
@@ -197,7 +197,7 @@ class Resistor(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação do resistor como linha da netlist
-        @return String no formato "R<nome> <nó_1> <nó_2> <valor>"
+        @return String no formato "R<nome> <nó_a> <nó_b> <valor>"
         @details Formato compatível com SPICE para resistor.
         '''
         return 'R' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
@@ -216,13 +216,13 @@ class Resistor(Componente):
         - Gn[j,i] -= 1/R
         - Gn[j,j] += 1/R
         '''
-        no_1 = self._posicao_nos[0]
-        no_2 = self._posicao_nos[1]
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
 
-        Gn[no_1, no_1] += 1/self.valor
-        Gn[no_1, no_2] -= 1/self.valor
-        Gn[no_2, no_1] -= 1/self.valor
-        Gn[no_2, no_2] += 1/self.valor
+        Gn[no_a, no_a] += 1/self.valor
+        Gn[no_a, no_b] -= 1/self.valor
+        Gn[no_b, no_a] -= 1/self.valor
+        Gn[no_b, no_b] += 1/self.valor
 
         return Gn, I
 
@@ -243,7 +243,7 @@ class Indutor(Componente):
         '''!
         @brief Construtor do indutor
         @param name Nome único do indutor
-        @param nos Lista com dois nós: [nó_pos, nó_neg]
+        @param nos Lista com dois nós: [nó_a, nó_b]
         @param valor Indutância em henrys (H)
         @param ic Corrente inicial no indutor (padrão: 0.0 A)
         @details O indutor conecta dois nós e tem uma indutância específica.
@@ -257,7 +257,7 @@ class Indutor(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação do indutor como linha da netlist
-        @return String no formato "L<nome> <nó_pos> <nó_neg> <valor> [IC=<corrente_inicial>]"
+        @return String no formato "L<nome> <nó_a> <nó_b> <valor> [IC=<corrente_inicial>]"
         @details Formato compatível com SPICE para indutor.
         '''
         if self.ic != 0.0:
@@ -280,20 +280,21 @@ class Indutor(Componente):
         - Termo histórico da corrente anterior
         '''
 
-        # Equação da tensão: V1 - V2 = L * di/dt
-        # Com Backward Euler: V1 - V2 = L * (i(t+Δt) - i(t))/Δt
-        # Rearranjando: V1 - V2 - L/Δt * i(t+Δt) = -L/Δt * i(t)
-        
-        Gn[self._posicao_nos[0], self._nos_mod[0]] += 1
-        Gn[self._posicao_nos[1], self._nos_mod[0]] -= 1
-        Gn[self._nos_mod[0], self._posicao_nos[0]] -= 1
-        Gn[self._nos_mod[0], self._posicao_nos[1]] += 1
-        Gn[self._nos_mod[0], self._nos_mod[0]] += self.valor/self.passo
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
+
+        no_corrente = self._nos_mod[0]
+
+        Gn[no_a, no_corrente] += 1
+        Gn[no_b, no_corrente] -= 1
+        Gn[no_corrente, no_a] -= 1
+        Gn[no_corrente, no_b] += 1
+        Gn[no_corrente, no_corrente] += self.valor/self.passo
 
         if t == 0.0:
-            I[self._nos_mod[0]] += (self.valor/self.passo)*self.ic
+            I[no_corrente] += (self.valor/self.passo)*self.ic
         else:
-            I[self._nos_mod[0]] += (self.valor/self.passo)*tensoes[self._nos_mod[0]-1]
+            I[no_corrente] += (self.valor/self.passo)*tensoes[no_corrente-1]
 
         return Gn, I
 
@@ -314,7 +315,7 @@ class Capacitor(Componente):
         '''!
         @brief Construtor do capacitor
         @param name Nome único do capacitor
-        @param nos Lista com dois nós: [nó_positivo, nó_negativo]
+        @param nos Lista com dois nós: [nó_a, nó_b]
         @param valor Capacitância em farads (F)
         @param ic Corrente no capacitor (valor inicial: 0.0 A)
         @details O capacitor conecta dois nós e tem uma capacitância específica.
@@ -327,7 +328,7 @@ class Capacitor(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação do capacitor como linha da netlist
-        @return String no formato "C<nome> <nó1> <nó2> <valor> [IC=<corrente_inicial>]"
+        @return String no formato "C<nome> <nó_a> <nó_b> <valor> [IC=<corrente_inicial>]"
         @details Formato compatível com SPICE para capacitor.
         '''
         if self.ic == 0.0:
@@ -349,22 +350,26 @@ class Capacitor(Componente):
         - Termo histórico da tensão anterior
         '''
         # Condutância equivalente do capacitor
+
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
+
         condutancia = self.valor / self.passo
-        vab = (tensoes[self._posicao_nos[0] - 1] - tensoes[self._posicao_nos[1] - 1])
+        vab = (tensoes[no_a - 1] - tensoes[no_b - 1])
         
         # Estampa da condutância
-        Gn[self._posicao_nos[0], self._posicao_nos[0]] += condutancia
-        Gn[self._posicao_nos[0], self._posicao_nos[1]] -= condutancia
-        Gn[self._posicao_nos[1], self._posicao_nos[0]] -= condutancia
-        Gn[self._posicao_nos[1], self._posicao_nos[1]] += condutancia
+        Gn[no_a, no_a] += condutancia
+        Gn[no_a, no_b] -= condutancia
+        Gn[no_b, no_a] -= condutancia
+        Gn[no_b, no_b] += condutancia
 
         # Termo histórico da tensão anterior
         if t == 0.0:
-            I[self._posicao_nos[0]] += condutancia*self.ic
-            I[self._posicao_nos[1]] -= condutancia*self.ic
+            I[no_a] += condutancia*self.ic
+            I[no_b] -= condutancia*self.ic
         else:
-            I[self._posicao_nos[0]] += condutancia*vab
-            I[self._posicao_nos[1]] -= condutancia*vab 
+            I[no_a] += condutancia*vab
+            I[no_b] -= condutancia*vab 
         return Gn, I
 
 class ResistorNaoLinear(Componente):
@@ -433,7 +438,11 @@ class ResistorNaoLinear(Componente):
         '''
         # TODO: Implementar cálculo da condutância e corrente baseada na tensão atual
         # Esta implementação requer acesso às tensões nodais atuais
-        vab = tensoes[self._posicao_nos[0] - 1] - tensoes[self._posicao_nos[1] - 1]
+
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
+
+        vab = tensoes[no_a - 1] - tensoes[no_b - 1]
         if vab > self.v3:
             g0 = (self.i4 - self.i3)/(self.v4 - self.v3)
             i0 = self.i4 - g0*self.v4
