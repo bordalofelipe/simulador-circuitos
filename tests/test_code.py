@@ -1,11 +1,13 @@
 import pytest
 import simulador
 
+
 def check_netlist(filename):
     ref = open(filename)
     test = open(filename + '.test')
     for line1, line2 in zip(ref, test):
         assert line1.strip() == line2.strip()
+
 
 def test_chua():
     c = simulador.Circuito('.TRAN', 1000, 0.1, 'BE', 1)
@@ -17,6 +19,7 @@ def test_chua():
     c.export('tests/chua.net.test')
     check_netlist('tests/chua.net')
 
+
 def test_dc_source():
     c = simulador.Circuito('.TRAN', 0.1, 1e-05, 'BE', 1)
     c.append(simulador.FonteTensao('7006', ['1', '0'], ['SIN', '0', '12', '60', '0.0', '0', '0', '6']))
@@ -25,7 +28,8 @@ def test_dc_source():
     c.append(simulador.Capacitor('2005', ['2', '0'], 4.9999999999999996e-05))
     c.export('tests/dc_source.net.test')
     check_netlist('tests/dc_source.net')
-    
+
+
 def test_lc():
     c = simulador.Circuito('.TRAN', 0.003, 3e-07, 'BE', 1)
     c.append(simulador.Indutor('3001', ['1', '0'], 0.001))
@@ -40,6 +44,7 @@ def test_lc():
     c.export('tests/lc.net.test')
     check_netlist('tests/lc.net')
 
+
 def test_mosfet_curve():
     c = simulador.Circuito('.TRAN', 0.1, 1e-5, 'BE', 1)
     c.append(simulador.FonteTensao('483502', ['1', '0'], ['PULSE', '0', '15', '0', '0.1', '0', '0', '1', '1']))
@@ -48,6 +53,7 @@ def test_mosfet_curve():
     c.append(simulador.Resistor('1026', ['3', '0'], 1))
     c.export('tests/mosfet_curve.net.test')
     check_netlist('tests/mosfet_curve.net')
+
 
 def test_opamp_rectifier():
     c = simulador.Circuito('.TRAN', 0.004, 1e-06, 'BE', 1)
@@ -66,13 +72,14 @@ def test_opamp_rectifier():
     c.export('tests/opamp_rectifier.net.test')
     check_netlist('tests/opamp_rectifier.net')
 
+
 def test_oscilator():
     c = simulador.Circuito('.TRAN', 0.05, 1e-06, 'BE', 1)
     c.append(simulador.Resistor('1012', ['1', '2'], 51000.0))
     c.append(simulador.Capacitor('2007', ['2', '3'], 1e-09))
     c.append(simulador.Resistor('1013', ['3', '0'], 51000.0))
     c.append(simulador.Capacitor('2008', ['3', '0'], 1e-09))
-    c.append(simulador.AmpOp('9903', ['3','4','1']))
+    c.append(simulador.AmpOp('9903', ['3', '4', '1']))
     c.append(simulador.Resistor('1014', ['4', '0'], 47000.0))
     c.append(simulador.Resistor('1015', ['1', '4'], 100000.0))
     c.append(simulador.Resistor('1016', ['1', '5'], 1000000.0))
@@ -81,6 +88,7 @@ def test_oscilator():
     c.export('tests/oscilator.net.test')
     check_netlist('tests/oscilator.net')
 
+
 def test_pulse():
     c = simulador.Circuito('.TRAN', 0.01, 1e-05, 'BE', 1)
     c.append(simulador.FonteTensao('5003', ['1', '0'], ['PULSE', '0', '5', '0.002', '0.0002', '0.0002', '0.0005', '0.001', '10']))
@@ -88,7 +96,8 @@ def test_pulse():
     c.append(simulador.Resistor('1003', ['2', '0'], 1000.0))
     c.export('tests/pulse.net.test')
     check_netlist('tests/pulse.net')
-    
+
+
 def test_sinusoidal():
     c = simulador.Circuito('.TRAN', 0.005, 1e-05, 'BE', 1)
     c.append(simulador.FonteTensao('4000', ['1', '0'], ['SIN', '1', '5', '1000', '0.002', '80', '90', '5']))

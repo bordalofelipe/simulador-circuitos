@@ -2,10 +2,10 @@ import simulador as s
 
 c = s.import_netlist('entrada.txt')
 
-#c = s.Circuito('asdsad', 'asdad', 'asda', 'asd')
+# c = s.Circuito('asdsad', 'asdad', 'asda', 'asd')
 
-#c += Componente()
-#c += Resistor()
+# c += Componente()
+# c += Resistor()
 # ...
 
 c.export('netlist.txt')

@@ -6,6 +6,7 @@ No terra
 '''
 GND = '0'
 
+
 class Circuito():
     def __init__(self, simulacao: str, tempo_total: float, passo: float, tipo_simulacao: str, passo_interno: int):
         self.simulacao = simulacao
@@ -44,7 +45,7 @@ class Circuito():
         return self.__delitem__(index)
 
     def __popular_nos(self):
-        self.__nos = [GND] # garante que o no terra eh o primeiro
+        self.__nos = [GND]  # garante que o no terra eh o primeiro
         hasGround = False
         for comp in self.__componentes:
             nos = comp.nos
@@ -60,30 +61,30 @@ class Circuito():
         self.__popular_nos()
         print('Circuito com ' + str(self.__nos) + ' nos')
         nao_linear = False
-        for com in self.__componentes: # aloca cada no para cada componente
+        for com in self.__componentes:  # aloca cada no para cada componente
             if not com.linear:
                 nao_linear = True
             com.set_posicao_nos([self.__nos.index(item) for item in com.nos])
-            ## Analise modificada
+            # Analise modificada
             print(str(com) + ' precisa de ' + str(com.num_nos_mod) + ' nos extras. Alocando nos: ', end=' ')
-            com.set_nos_mod([len(self.__nos) + i for i in range(com.num_nos_mod)]) # informa indices
+            com.set_nos_mod([len(self.__nos) + i for i in range(com.num_nos_mod)])  # informa indices
             print(com._nos_mod)
-            for i in range(com.num_nos_mod): # adiciona nos modificados na lista de todos os nos
-                #self.__nos.append('mod' + str(len(self.__nos)))
-                self.__nos.append('J' + str(len(self.__nos)) + str(com).split(' ')[0]) # sintaxe moreirao
-        
-        num_vars = len(self.__nos) - 1 # Número de variáveis (nós - 1, pois terra é 0)
+            for i in range(com.num_nos_mod):  # adiciona nos modificados na lista de todos os nos
+                # self.__nos.append('mod' + str(len(self.__nos)))
+                self.__nos.append('J' + str(len(self.__nos)) + str(com).split(' ')[0])  # sintaxe moreirao
+
+        num_vars = len(self.__nos) - 1  # Número de variáveis (nós - 1, pois terra é 0)
         print('Circuito final com ' + str(num_vars) + ' variaveis')
         if nao_linear:
             print('Analise nao linear necessaria')
-            
+
         # --- Parâmetros da Análise no Tempo ---
         N_MAX = 50
         M_MAX = 100
         STEP_FACTOR = 1000
         TOLERANCIA = 0.001
-        
-        resultado = Resultado(self.__nos[1:], [], []) # pula o no terra
+
+        resultado = Resultado(self.__nos[1:], [], [])  # pula o no terra
         # Simulação no tempo
         tempo = 0
         while tempo < self.tempo_total:
@@ -104,7 +105,7 @@ class Circuito():
                 n_guesses = 0
                 n_newton_raphson = 0
                 while not stop_newton_raphson:
-                
+
                     if nao_linear and n_newton_raphson == N_MAX:
                         if n_guesses >= M_MAX:
                             raise Exception(f"Simulação falhou em t={tempo}s. O sistema é impossível de ser solucionado após {M_MAX} tentativas aleatórias.")
@@ -113,14 +114,14 @@ class Circuito():
                         previous = list(np.random.rand(num_vars))
                         n_guesses += 1
                         n_newton_raphson = 0
-                    
+
                     # --- Montagem da Estampa (dentro do loop N-R) ---
                     matrizGn = np.zeros((len(self.__nos), len(self.__nos)))
                     matrizI = np.zeros((len(self.__nos), 1))
-                    
+
                     for com in self.__componentes:
-                        com.passo = passo # IMPORTANTE: Usar o 'passo' calculado (pode ser o passo menor)
-                        
+                        com.passo = passo  # IMPORTANTE: Usar o 'passo' calculado (pode ser o passo menor)
+
                         # As estampas não lineares usam 'previous' (o chute, x(t))
                         if self.tipo_simulacao == 'BE':
                             matrizGn, matrizI = com.estampaBE(matrizGn, matrizI, tempo, previous)
@@ -128,55 +129,56 @@ class Circuito():
                             matrizGn, matrizI = com.estampaFE(matrizGn, matrizI, tempo, previous)
                         elif self.tipo_simulacao == 'TRAP':
                             matrizGn, matrizI = com.estampaTrap(matrizGn, matrizI, tempo, previous)
-                    
+
                     # print(self.__nos)
                     # print(matrizGn, matrizI)
-                    
+
                     # Resolve o sistema Ax = b
-                    tensoes = np.linalg.solve(matrizGn[1:,1:], matrizI[1:])
-                    tensoes = tensoes.flatten() # Garante que é um vetor 1D
-                    tensoes = [0] + list(tensoes)  # Ajusta o tensoes para considerar o nó terra
+                    tensoes = np.linalg.solve(matrizGn[1:, 1:], matrizI[1:])
+                    tensoes = tensoes.flatten()  # Garante que é um vetor 1D
+                    tensoes = [0.0] + list(tensoes)  # Ajusta o tensoes para considerar o nó terra
 
                     # Calcula a tolerância (máximo erro entre os nós)
-                    tolerance = max([abs(i-j) for i,j in zip(tensoes, previous)])
-                    #print(tolerance)
+                    tolerance = max([abs(i-j) for i, j in zip(tensoes, previous)])
+                    # print(tolerance)
                     if nao_linear and (tolerance > TOLERANCIA):
                         # Não convergiu, próxima iteração
                         previous = tensoes
                         n_newton_raphson += 1
                     else:
-                        stop_newton_raphson = True # Convergiu ou é linear
+                        stop_newton_raphson = True  # Convergiu ou é linear
                 # --- Fim do loop Newton-Raphson ---
 
                 # atualiza condicoes iniciais
                 for com in self.__componentes:
-                    com.update( tensoes )
+                    com.update(tensoes)
                 passo_interno_atual += 1
 
             # --- Fim do loop interno ---
-            resultado.append(tempo, tensoes[1:] ) # pula o no terra
+            resultado.append(tempo, tensoes[1:])  # pula o no terra
 
             if round((tempo / self.tempo_total) * 100) % 10 == 0:
                 print(f"Simulação... {round((tempo / self.tempo_total) * 100)}%")
 
             tempo += self.passo
-        
+
         # --- Fim do loop do tempo ---
-            
+
         print("Simulação concluída.")
         return resultado
 
     def export(self, filename: str):
         with open(filename, 'w') as f:
             self.__popular_nos()
-            f.write(str(len(self.__nos)-1) + '\n') # por causa do no terra, tirar 1
+            f.write(str(len(self.__nos)-1) + '\n')  # por causa do no terra, tirar 1
             for com in self.__componentes:
                 f.write(str(com) + '\n')
             f.write(self.simulacao + ' ' + str(self.tempo_total) + ' ' + str(self.passo) + ' ' + self.tipo_simulacao + ' ' + str(self.passo_interno))
 
+
 def import_netlist(filename: str):
     with open(filename) as f:
-        line = f.readline() # nao usamos primeira linha
+        line = f.readline()  # nao usamos primeira linha
         componentes = []
         line = f.readline()
         while line != '':
@@ -227,6 +229,7 @@ def import_netlist(filename: str):
             circuit.append(comp)
         return circuit
     return Circuito()
+
 
 class Resultado():
     def __init__(self, nos: list[str], t: list[float], resultado: list[list[float]]):
@@ -282,6 +285,7 @@ class Resultado():
 
     def to_pandas(self):
         return False
+
 
 def import_resultado(filename: str):
     with open(filename) as f:

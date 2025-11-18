@@ -1,12 +1,13 @@
 import numpy as np
 
+
 class Componente():
     '''!
     @brief Classe abstrata base para todos os componentes de circuito
     @details Esta classe define a interface comum para todos os componentes de circuito elétrico.
     Ela implementa o padrão de projeto Template Method, onde cada componente específico
     deve implementar suas próprias estampas para os diferentes métodos de integração.
-    
+
     A classe utiliza análise nodal modificada para resolver circuitos, onde cada componente
     contribui com sua estampa para as matrizes de condutância (Gn) e corrente (I).
 
@@ -16,15 +17,15 @@ class Componente():
         Número de nós do componente.
     @var _num_nos_mod
         Número de nós modificados.
-    
+
     @author Equipe do Simulador de Circuitos
     @date 2025
     '''
     _linear = True
     _num_nos = 0
     _num_nos_mod = 0
-    passo = 0.0 # passo de tempo, definido por Circuito.run()
-    
+    passo = 0.0  # passo de tempo, definido por Circuito.run()
+
     def __init__(self, name: str, nos: list[str]):
         '''!
         @brief Construtor da classe Componente
@@ -88,8 +89,8 @@ class Componente():
         @details Esta representação é usada para salvar o circuito em arquivo netlist
         e deve seguir o formato padrão SPICE.
         '''
-        return 'Componente' 
-    
+        return 'Componente'
+
     def update(self, tensoes):
         '''!
         @brief Atualiza as condições iniciais do componente
@@ -153,7 +154,7 @@ class Componente():
         O método Backward Euler é o padrão para simulação transiente.
         '''
         raise NotImplementedError
-        
+
     def estampaTrap(self, Gn, I, t, tensoes):
         '''!
         @brief Adiciona a estampa do componente usando método Trapezoidal
@@ -166,7 +167,7 @@ class Componente():
         O método Trapezoidal oferece melhor precisão que Backward Euler.
         '''
         raise NotImplementedError
-        
+
     def estampaFE(self, Gn, I, t, tensoes):
         '''!
         @brief Adiciona a estampa do componente usando método Forward Euler
@@ -180,17 +181,18 @@ class Componente():
         '''
         raise NotImplementedError
 
+
 class Resistor(Componente):
     '''!
     @brief Representa um resistor linear no circuito
     @details O resistor é um componente linear que obedece à lei de Ohm: V = R*I.
-    
+
     @image html resistor.png "Resistor"
     '''
     _linear = True
     _num_nos = 2
     _num_nos_mod = 0
-    
+
     def __init__(self, name: str, nos: list[str], valor: float):
         '''!
         @brief Construtor do resistor
@@ -234,13 +236,14 @@ class Resistor(Componente):
 
         return Gn, I
 
+
 class Indutor(Componente):
     '''!
     @brief Representa um indutor no circuito
     @details O indutor é um componente linear que armazena energia no campo magnético.
     Sua corrente e tensão estão relacionadas por: V = L * dI/dt.
     Na análise nodal modificada, requer um nó extra para representar a corrente.
-    
+
     @image html inductor_stamp.png "Estampa do Indutor"
     '''
     _linear = True
@@ -306,10 +309,11 @@ class Indutor(Componente):
         if t == 0.0:
             I[no_corrente] += (self.valor/self.passo)*self.ic
         else:
-            #I[no_corrente] += (self.valor/self.passo)*tensoes[no_corrente]
+            # I[no_corrente] += (self.valor/self.passo)*tensoes[no_corrente]
             I[no_corrente] += (self.valor/self.passo)*self.previous
 
         return Gn, I
+
 
 class Capacitor(Componente):
     '''!
@@ -317,13 +321,13 @@ class Capacitor(Componente):
     @details O capacitor é um componente linear que armazena energia no campo elétrico.
     Sua corrente e tensão estão relacionadas por: I = C * dV/dt.
     Na análise nodal, sua estampa depende do método de integração utilizado.
-    
+
     @image html capacitor_stamp.png "Estampa do Capacitor"
     '''
     _linear = True
     _num_nos = 2
     _num_nos_mod = 0
-    
+
     def __init__(self, name: str, nos: list[str], valor: float, ic=0.0):
         '''!
         @brief Construtor do capacitor
@@ -374,7 +378,7 @@ class Capacitor(Componente):
         no_b = self._posicao_nos[1]
 
         condutancia = self.valor / self.passo
-        #vab = (tensoes[no_a] - tensoes[no_b])
+        # vab = (tensoes[no_a] - tensoes[no_b])
         vab = self.previous
 
         # Estampa da condutância
@@ -389,8 +393,9 @@ class Capacitor(Componente):
             I[no_b] -= condutancia*self.ic
         else:
             I[no_a] += condutancia*vab
-            I[no_b] -= condutancia*vab 
+            I[no_b] -= condutancia*vab
         return Gn, I
+
 
 class ResistorNaoLinear(Componente):
     '''!
@@ -398,13 +403,13 @@ class ResistorNaoLinear(Componente):
     @details O resistor não linear é modelado por uma curva tensão-corrente definida
     por 4 pontos (V1,I1), (V2,I2), (V3,I3), (V4,I4), formando 3 segmentos lineares.
     A condutância é calculada dinamicamente baseada na tensão atual.
-    
+
     @image html nonlinear_resistor.png "Característica do Resistor Não Linear"
     '''
     _linear = False
     _num_nos = 2
     _num_nos_mod = 0
-    
+
     def __init__(self, name: str, nos: list[str], v1: float, i1: float, v2: float, i2: float, v3: float, i3: float, v4: float, i4: float):
         '''!
         @brief Construtor do resistor não linear
@@ -472,7 +477,7 @@ class ResistorNaoLinear(Componente):
         else:
             g0 = (self.i2 - self.i1)/(self.v2 - self.v1)
             i0 = self.i2 - g0*self.v2
-        
+
         self.condutancia.valor = 1/g0
         self.fonte.args = ['DC', i0]
         # self.fonte.processa_argumentos_fonte(self.fonte.args)
@@ -482,6 +487,7 @@ class ResistorNaoLinear(Componente):
         Gn, I = self.fonte.estampaBE(Gn, I, t, tensoes)
         return Gn, I
 
+
 # tensao controlada por tensao
 class FonteTensaoTensao(Componente):
     '''!
@@ -489,16 +495,16 @@ class FonteTensaoTensao(Componente):
     @details A fonte de tensão controlada por tensão é um componente linear que
     gera uma tensão de saída proporcional à tensão de entrada. A relação é:
     Vout = A * Vin, onde A é o ganho de tensão.
-    
+
     Na análise nodal modificada, requer um nó extra para representar a corrente
     da fonte de tensão.
-    
+
     @image html vcvs_stamp.png "Estampa da Fonte de Tensão Controlada por Tensão"
     '''
     _linear = True
     _num_nos = 4
     _num_nos_mod = 1
-    
+
     def __init__(self, name: str, nos: list[str], valor: float):
         '''!
         @brief Construtor da fonte de tensão controlada por tensão
@@ -536,16 +542,16 @@ class FonteTensaoTensao(Componente):
         no_controle_neg = self._posicao_nos[3]
 
         no_corrente = self._nos_mod[0]
-        
+
         Gn[no_saida_pos, no_corrente] += 1
         Gn[no_saida_neg, no_corrente] -= 1
         Gn[no_corrente, no_controle_pos] += self.valor
         Gn[no_corrente, no_controle_neg] -= self.valor
         Gn[no_corrente, no_saida_pos] -= 1
         Gn[no_corrente, no_saida_neg] += 1
-        
+
         return Gn, I
-        
+
 
 # corrente controlada por corrente
 class FonteCorrenteCorrente(Componente):
@@ -560,6 +566,7 @@ class FonteCorrenteCorrente(Componente):
     _linear = True
     _num_nos = 4
     _num_nos_mod = 1
+
     def __init__(self, name: str, nos: list[str], valor: float):
         '''!
         @brief Construtor da Fonte de corrente controlada por corrente
@@ -589,7 +596,7 @@ class FonteCorrenteCorrente(Componente):
         no_saida_neg = self._posicao_nos[1]
         no_controle_pos = self._posicao_nos[2]
         no_controle_neg = self._posicao_nos[3]
-        
+
         no_corrente = self._nos_mod[0]
 
         Gn[no_saida_pos, no_corrente] -= self.valor
@@ -598,8 +605,9 @@ class FonteCorrenteCorrente(Componente):
         Gn[no_controle_neg, no_corrente] -= 1
         Gn[no_corrente, no_controle_pos] -= 1
         Gn[no_corrente, no_controle_neg] += 1
-       
+
         return Gn, I
+
 
 # corrente controlada por tensao
 class FonteCorrenteTensao(Componente):
@@ -609,6 +617,7 @@ class FonteCorrenteTensao(Componente):
     _linear = True
     _num_nos = 4
     _num_nos_mod = 0
+
     def __init__(self, name: str, nos: list[str], valor: float):
         '''!
         @brief Construtor da Fonte de corrente controlada por tensao
@@ -645,8 +654,9 @@ class FonteCorrenteTensao(Componente):
         Gn[no_saida_pos, no_controle_neg] -= self.valor
         Gn[no_saida_neg, no_controle_pos] -= self.valor
         Gn[no_saida_neg, no_controle_neg] += self.valor
-        
+
         return Gn, I
+
 
 # tensao controlada por corrente
 class FonteTensaoCorrente(Componente):
@@ -656,6 +666,7 @@ class FonteTensaoCorrente(Componente):
     _linear = True
     _num_nos = 4
     _num_nos_mod = 2
+
     def __init__(self, name: str, nos: list[str], valor: float):
         '''!
         @brief Construtor da Fonte de tensao controlada por corrente
@@ -689,10 +700,9 @@ class FonteTensaoCorrente(Componente):
         no_controle_pos = self._posicao_nos[2]
         no_controle_neg = self._posicao_nos[3]
 
-        no_corrente1 = self._nos_mod[0]  
-        no_corrente2 = self._nos_mod[1]  
-        
-                
+        no_corrente1 = self._nos_mod[0]
+        no_corrente2 = self._nos_mod[1]
+
         Gn[no_saida_pos, no_corrente1] -= 1
         Gn[no_saida_neg, no_corrente1] += 1
         Gn[no_controle_pos, no_corrente2] -= 1
@@ -702,8 +712,9 @@ class FonteTensaoCorrente(Componente):
         Gn[no_corrente2, no_controle_pos] += 1
         Gn[no_corrente2, no_controle_neg] -= 1
         Gn[no_corrente2, no_corrente1] += self.valor
-        
+
         return Gn, I
+
 
 class Diodo(Componente):
     '''!
@@ -712,6 +723,7 @@ class Diodo(Componente):
     _linear = False
     _num_nos = 2
     _num_nos_mod = 0
+
     def __init__(self, name: str, nos: list[str]):
         '''!
         @brief Construtor do Diodo
@@ -758,6 +770,7 @@ class Diodo(Componente):
         Gn, I = self.fonte.estampaBE(Gn, I, t, tensoes)
         return Gn, I
 
+
 class AmpOp(Componente):
     '''!
     @brief Esta classe implementa o Amplificador Operacional ideal e sua estampa
@@ -765,6 +778,7 @@ class AmpOp(Componente):
     _linear = True
     _num_nos = 3
     _num_nos_mod = 1
+
     def __init__(self, name: str, nos: list[str]):
         '''!
         @brief Construtor do Amplificador Operacional
@@ -783,7 +797,7 @@ class AmpOp(Componente):
     def estampaBE(self, Gn, I, t, tensoes):
         # Nó extra para corrente de saída do amp op
         no_corrente = self._nos_mod[0]
-        
+
         # Equação da tensão de saída: Vout = A * (V+ - V-)
         # Para amp op ideal: A = infinito, então V+ = V-
         # Equação: V+ - V- = 0
@@ -792,22 +806,21 @@ class AmpOp(Componente):
         # Contribuições para a equação V+ - V- = 0
         Gn[self._posicao_nos[0], no_corrente] -= 1  # -V+
         Gn[self._posicao_nos[1], no_corrente] += 1  # +V-
-        
+
         # Equação da corrente de saída
         Gn[no_corrente, self._posicao_nos[0]] += 1   # +V+
         Gn[no_corrente, self._posicao_nos[1]] -= 1   # -V-
         Gn[no_corrente, self._posicao_nos[2]] += 1   # +Vout
-        ''' 
-    
-        #Gn[0, no_corrente] -= 1
+        '''
+
+        # Gn[0, no_corrente] -= 1
         Gn[self._posicao_nos[2], no_corrente] += 1
 
         Gn[no_corrente, self._posicao_nos[0]] -= 1
         Gn[no_corrente, self._posicao_nos[1]] += 1
-        
 
-        
         return Gn, I
+
 
 class Mosfet(Componente):
     '''!
@@ -819,7 +832,7 @@ class Mosfet(Componente):
     de saída (Gds) e uma fonte de corrente equivalente (Ieq) para linearizar
     o comportamento em torno do ponto de operação atual.
     '''
-    _num_nos = 3 # Dreno, Porta, Fonte
+    _num_nos = 3  # Dreno, Porta, Fonte
     _num_nos_mod = 0
     _linear = False
 
@@ -845,7 +858,6 @@ class Mosfet(Componente):
         self.beta = self.K * (self.W / self.L)
 
     def __str__(self):
-        
         '''!
         @brief Retorna representação do MOSFET como linha da netlist
         @return String no formato "M<nome> <nó-drain> <nó-gate> <nó-source> <tipo> <W> <L> <lambda> <K> <Vth>"
@@ -871,7 +883,7 @@ class Mosfet(Componente):
         # Inicializa parâmetros do modelo companheiro
         i_d = 0.0
         gm = 0.0
-        gds = 1e-9 # Condutância pequena para evitar matriz singular
+        gds = 1e-9  # Condutância pequena para evitar matriz singular
 
         if self.tipo == 'N':
             vgs = vg - vs
@@ -880,13 +892,13 @@ class Mosfet(Componente):
 
             if vgs <= vth:
                 # Região de Corte
-                pass # i_d, gm, gds já são zero (ou próximo)
+                pass  # i_d, gm, gds já são zero (ou próximo)
             elif vds < (vgs - vth):
                 # Região de Triodo
                 i_d = self.beta * ((vgs - vth) * vds - 0.5 * vds**2)
                 gm = self.beta * vds
                 gds = self.beta * (vgs - vth - vds)
-            else: # vds >= (vgs - vth)
+            else:  # vds >= (vgs - vth)
                 # Região de Saturação
                 i_d = 0.5 * self.beta * (vgs - vth)**2
                 gm = self.beta * (vgs - vth)
@@ -894,20 +906,20 @@ class Mosfet(Componente):
 
             # Fonte de corrente equivalente do modelo companheiro
             ieq = i_d - gm * vgs - gds * vds
-           
+
             # Estampa do modelo companheiro (VCCS + Gds + Ieq)
             # Contribuição de Gds (resistor entre Dreno e Fonte)
             Gn[d, d] += gds
             Gn[d, s] -= gds
             Gn[s, d] -= gds
             Gn[s, s] += gds
-           
+
             # Contribuição de Gm (fonte de corrente D->S controlada por Vgs)
             Gn[d, g] += gm
             Gn[d, s] -= gm
             Gn[s, g] -= gm
             Gn[s, s] += gm
-           
+
             # Contribuição da fonte de corrente Ieq
             I[d] -= ieq
             I[s] += ieq
@@ -915,17 +927,17 @@ class Mosfet(Componente):
         elif self.tipo == 'P':
             vsg = vs - vg
             vsd = vs - vd
-            vth = abs(self.Vth) # Vth do PMOS é negativo, mas usamos seu módulo nas fórmulas
+            vth = abs(self.Vth)  # Vth do PMOS é negativo, mas usamos seu módulo nas fórmulas
 
             if vsg <= vth:
                 # Região de Corte
-                pass # i_d, gm, gds já são zero
+                pass  # i_d, gm, gds já são zero
             elif vsd < (vsg - vth):
                 # Região de Triodo
                 i_d = self.beta * ((vsg - vth) * vsd - 0.5 * vsd**2)
                 gm = self.beta * vsd
                 gds = self.beta * (vsg - vth - vsd)
-            else: # vsd >= (vsg - vth)
+            else:  # vsd >= (vsg - vth)
                 # Região de Saturação
                 i_d = 0.5 * self.beta * (vsg - vth)**2
                 gm = self.beta * (vsg - vth)
@@ -933,25 +945,26 @@ class Mosfet(Componente):
 
             # i_d calculado é a corrente S->D. Ieq também é S->D.
             ieq = i_d - gm * vsg - gds * vsd
-           
+
             # Estampa do modelo companheiro para PMOS
             # Contribuição de Gds (resistor entre Fonte e Dreno)
             Gn[s, s] += gds
             Gn[s, d] -= gds
             Gn[d, s] -= gds
             Gn[d, d] += gds
-           
+
             # Contribuição de Gm (fonte de corrente S->D controlada por Vsg)
             Gn[s, g] -= gm
             Gn[s, s] += gm
             Gn[d, g] += gm
             Gn[d, s] -= gm
-           
+
             # Contribuição da fonte de corrente Ieq (S->D)
             I[s] -= ieq
             I[d] += ieq
-           
+
         return Gn, I
+
 
 class FonteCorrente(Componente):
     '''!
@@ -960,6 +973,7 @@ class FonteCorrente(Componente):
     _linear = True
     _num_nos = 2
     _num_nos_mod = 0
+
     def __init__(self, name: str, nos: list[str], args: list):
         '''!
         @brief Construtor Fonte de corrente
@@ -990,6 +1004,7 @@ class FonteCorrente(Componente):
         I[self._posicao_nos[1]] += corrente
         return Gn, I
 
+
 class FonteTensao(Componente):
     '''!
     @brief Esta classe implementa a Fonte de tensao e sua estampa
@@ -997,6 +1012,7 @@ class FonteTensao(Componente):
     _linear = True
     _num_nos = 2
     _num_nos_mod = 1
+
     def __init__(self, name: str, nos: list[str], args: list):
         '''!
         @brief Construtor da Fonte de tensao
@@ -1021,7 +1037,7 @@ class FonteTensao(Componente):
     def estampaBE(self, Gn, I, t, tensoes):
         # Condutância equivalente do capacitor
         tensao = self.calcular_valor_fonte(t)
-        
+
         # Estampa da condutância
         Gn[self._posicao_nos[0], self._nos_mod[0]] += 1
         Gn[self._posicao_nos[1], self._nos_mod[0]] -= 1
