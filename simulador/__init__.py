@@ -149,48 +149,41 @@ class Circuito():
         
         resultado = Resultado(self.__nos[1:], [], []) # pula o no terra
         tempo = 0
+
+        print(f"Transient simulation started with self.tempo_total={self.tempo_total}, self.passo={self.passo}")
+        print(f"max_tolerance={TOLERANCIA}")
+        print(f"Max number of nodes: {num_vars}")
         
         while tempo < self.tempo_total:
-            
-            # --- REQUISITO 3: Implementação do "Primeiro Passo"  ---
-            if tempo == 0:
-                passo = self.passo / STEP_FACTOR
+
+            if tempo==0:
+                max_internal_step = 1
+                # NOTE: at the beginner, using short step to accomodate the circuit at first loop
+                passo = self.passo/STEP_FACTOR
             else:
                 passo = self.passo
-            # ---
-                
-            passo_interno_atual = 0
-            while passo_interno_atual < self.passo_interno:
-                
-                # Define o chute inicial (x(t)) para o Newton-Raphson
-                if len(resultado) == 0:
-                    # Chute inicial em t=0 [cite: 97]
-                    previous = np.zeros(num_vars)
-                else:
-                    # Chute é o resultado anterior
-                    previous = np.array(resultado[-1][1]) # resultado[i] = (tempo, [tensoes])
 
-                # --- REQUISITO 3: Loop de Newton-Raphson (N, M) [cite: 71-79, 94-120] ---
-                stop_newton_raphson = False
-                n_guesses = 0
-                n_newton_raphson = 0
-                
+            previous = resultado[-1][1] if len(resultado) > 0 else [0.0 for i in range(len(self.__nos))]
+
+            internal_step = 0
+            while internal_step < max_internal_step:
+
+                # NOTE: Newton Raphson loop
+                # Execute 20 ciclos and if not converge, abort the approximation and repeat the guess
+                # If the max number of guess reached (100 guesses), abort the simulation
+                stop_newton_raphson                = False
+                number_of_guesses                  = 0
+                #previous                           = np.random.rand( num_vars )
+                number_of_execution_newton_raphson = 0
                 while not stop_newton_raphson:
+                
+                    if number_of_execution_newton_raphson == N_MAX:
+                        if number_of_guesses > M_MAX:
+                            raise Exception("Its not possible to found a solution to this problem.")
+                        previous = list(np.random.rand(num_vars))
+                        number_of_guesses+=1
+                        number_of_execution_newton_raphson=0
                     
-                    # Verifica se estourou as N tentativas de N-R
-                    if nao_linear and n_newton_raphson >= N_MAX: # [cite: 72-73, 99]
-                        
-                        # Verifica se estourou as M tentativas de chutes aleatórios
-                        if n_guesses >= M_MAX: # [cite: 76-77]
-                            # 
-                            raise Exception(f"Simulação falhou em t={tempo}s. O sistema é impossível de ser solucionado após {M_MAX} tentativas aleatórias.")
-                        
-                        # Gera novo chute aleatório [cite: 72, 101]
-                        print(f"Aviso: Falha na convergência (N={N_MAX}). Gerando chute aleatório {n_guesses+1}/{M_MAX}.")
-                        previous = np.random.rand(num_vars) # [cite: 101]
-                        n_guesses += 1 # [cite: 102]
-                        n_newton_raphson = 0 # Reinicia a contagem de N-R
-
                     # --- Montagem da Estampa (dentro do loop N-R) [cite: 104-112] ---
                     matrizGn = np.zeros((len(self.__nos), len(self.__nos)))
                     matrizI = np.zeros((len(self.__nos), 1))
@@ -212,30 +205,31 @@ class Circuito():
                     # Resolve o sistema Ax = b [cite: 113]
                     tensoes = np.linalg.solve(matrizGn[1:,1:], matrizI[1:])
                     tensoes = tensoes.flatten() # Garante que é um vetor 1D
-
-                    # --- Teste de Convergência [cite: 114, 116] ---
-                    if not nao_linear:
-                        stop_newton_raphson = True # [cite: 119-120]
+                    # -----------------------------------------------------------
+                    tensoes = [0] + list(tensoes)  # Ajusta o tensoes para considerar o nó terra
+                    # Calcula a tolerância (máximo erro entre os nós) [cite: 114-119]
+                    #previous = [0] + list(previous)  # Ajusta o previous para considerar o nó terra
+                    tolerance = max([abs(i-j) for i,j in zip(tensoes, previous)])
+                    #print(tolerance)
+                    if nao_linear and (tolerance > TOLERANCIA):
+                        previous = tensoes
+                        number_of_execution_newton_raphson += 1
                     else:
-                        tolerancia = np.max(np.abs(tensoes - previous)) # [cite: 114]
-                        
-                        if tolerancia <= TOLERANCIA:
-                            stop_newton_raphson = True # Convergiu! [cite: 119-120]
-                        else:
-                            # Não convergiu, prepara próximo chute [cite: 117]
-                            previous = tensoes 
-                            n_newton_raphson += 1 # [cite: 118]
-                # --- Fim do loop Newton-Raphson ---
+                        stop_newton_raphson = True
+                # end of Newton Raphson
 
-                passo_interno_atual += 1
-            
-            # (Pseudocode lines 124-127)
-            resultado.append(tempo, list(tensoes)) # Armazena o resultado convergido [cite: 124]
-            
+                # update ICs
+                for com in self.__componentes:
+                    com.update( tensoes )
+                
+                internal_step += 1
+
+            # end of internal step
+
             if round((tempo / self.tempo_total) * 100) % 10 == 0:
                 print(f"Simulação... {round((tempo / self.tempo_total) * 100)}%")
-            
-            tempo += passo # [cite: 127]
+            resultado.append(tempo, tensoes[1:] ) # pula o no terra
+            tempo += self.passo
             
         print("Simulação concluída.")
         return resultado

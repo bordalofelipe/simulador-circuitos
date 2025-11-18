@@ -13,7 +13,7 @@ def check_tolerances(filename):
     total_samples = 0
     for r, t in zip(ref, test):
         nodes_ref = r[1]
-        nodes_test = r[1]
+        nodes_test = t[1]
         delta = [abs(i-j) for i, j in zip(nodes_ref, nodes_test)]
         total_error += max(delta)
         total_samples += 1

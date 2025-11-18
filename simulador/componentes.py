@@ -89,6 +89,13 @@ class Componente():
         e deve seguir o formato padrão SPICE.
         '''
         return 'Componente' 
+    
+    def update(self, tensoes):
+        '''!
+        @brief Atualiza as condições iniciais do componente
+        @param tensoes tensoes no instante anterior
+        '''
+        pass
 
     def processa_argumentos_fonte(self, args):
         '''!
@@ -131,6 +138,7 @@ class Componente():
         elif self.tipo == 'PULSE':
             tempo_total = self.ciclos*self.periodo
             valor = 0
+            raise NotImplementedError
         return valor
 
     def estampaBE(self, Gn, I, t, tensoes):
@@ -252,7 +260,11 @@ class Indutor(Componente):
         super().__init__(name, nos)
         self.valor = valor
         self.ic = ic
-        self.corrente_atual = ic  # corrente no tempo atual
+        self.previous = ic
+
+    def update(self, tensoes):
+        no_corrente = self._nos_mod[0]
+        self.previous = tensoes[no_corrente]
 
     def __str__(self):
         '''!
@@ -294,7 +306,8 @@ class Indutor(Componente):
         if t == 0.0:
             I[no_corrente] += (self.valor/self.passo)*self.ic
         else:
-            I[no_corrente] += (self.valor/self.passo)*tensoes[no_corrente-1]
+            #I[no_corrente] += (self.valor/self.passo)*tensoes[no_corrente]
+            I[no_corrente] += (self.valor/self.passo)*self.previous
 
         return Gn, I
 
@@ -324,6 +337,7 @@ class Capacitor(Componente):
         super().__init__(name, nos)
         self.valor = valor
         self.ic = ic
+        self.previous = ic
 
     def __str__(self):
         '''!
@@ -335,6 +349,11 @@ class Capacitor(Componente):
             return 'C' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
         else:
             return 'C' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor) + ' IC=' + str(self.ic)
+
+    def update(self, tensoes):
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
+        self.previous = (tensoes[no_a] - tensoes[no_b])
 
     def estampaBE(self, Gn, I, t, tensoes):
         '''!
@@ -355,8 +374,9 @@ class Capacitor(Componente):
         no_b = self._posicao_nos[1]
 
         condutancia = self.valor / self.passo
-        vab = (tensoes[no_a - 1] - tensoes[no_b - 1])
-        
+        #vab = (tensoes[no_a] - tensoes[no_b])
+        vab = self.previous
+
         # Estampa da condutância
         Gn[no_a, no_a] += condutancia
         Gn[no_a, no_b] -= condutancia
@@ -442,7 +462,7 @@ class ResistorNaoLinear(Componente):
         no_a = self._posicao_nos[0]
         no_b = self._posicao_nos[1]
 
-        vab = tensoes[no_a - 1] - tensoes[no_b - 1]
+        vab = tensoes[no_a] - tensoes[no_b]
         if vab > self.v3:
             g0 = (self.i4 - self.i3)/(self.v4 - self.v3)
             i0 = self.i4 - g0*self.v4
@@ -715,13 +735,16 @@ class Diodo(Componente):
         return 'D' + self.name + ' ' + ' '.join(str(no) for no in self.nos)
 
     def estampaBE(self, Gn, I, t, tensoes):
-        vab = tensoes[self._posicao_nos[0] - 1] - tensoes[self._posicao_nos[1] - 1]
+        # vab = tensoes[self._posicao_nos[0] - 1] - tensoes[self._posicao_nos[1] - 1]
+        vab = tensoes[self._posicao_nos[0]] - tensoes[self._posicao_nos[1]]
 
         if vab > 0.9:
             vab = 0.9
 
         g0 = 3.7751345e-14*np.exp(vab/25e-3)/25e-3
         g0 = float(g0)
+        if g0 == 0:
+            print(f'AVISO: g0 = {g0} ; vab = {vab} ; np.exp(...) = {np.exp(vab/25e-3)} ; np.exp(...)/25e-3 = {np.exp(vab/25e-3)/25e-3}')
         id = 3.7751345e-14*(np.exp(vab/25e-3)-1)-g0*vab
         id = float(id)
 
@@ -839,9 +862,9 @@ class Mosfet(Componente):
         s = self._posicao_nos[2]
 
         # Tensões da iteração anterior de Newton-Raphson
-        vd = tensoes[d - 1]
-        vg = tensoes[g - 1]
-        vs = tensoes[s - 1]
+        vd = tensoes[d]
+        vg = tensoes[g]
+        vs = tensoes[s]
 
         # Inicializa parâmetros do modelo companheiro
         i_d = 0.0
