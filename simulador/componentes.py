@@ -748,11 +748,13 @@ class Diodo(Componente):
         id = 3.7751345e-14*(np.exp(vab/25e-3)-1)-g0*vab
         id = float(id)
 
-        self.condutancia.valor = 1/g0
+        if g0 != 0:
+            self.condutancia.valor = 1/g0
         self.fonte.args = ['DC', id]
         self.fonte.processa_argumentos_fonte(self.fonte.args)
 
-        Gn, I = self.condutancia.estampaBE(Gn, I, t, tensoes)
+        if g0 != 0:
+            Gn, I = self.condutancia.estampaBE(Gn, I, t, tensoes)
         Gn, I = self.fonte.estampaBE(Gn, I, t, tensoes)
         return Gn, I
 
