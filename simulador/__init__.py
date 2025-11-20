@@ -157,9 +157,6 @@ class Circuito():
             # --- Fim do loop interno ---
             resultado.append(tempo, tensoes[1:])  # pula o no terra
 
-            if round((tempo / self.tempo_total) * 100) % 10 == 0:
-                print(f"Simulação... {round((tempo / self.tempo_total) * 100)}%")
-
             tempo += self.passo
 
         # --- Fim do loop do tempo ---
@@ -237,6 +234,66 @@ class Resultado():
         self.__t = t
         self.__resultado = resultado
 
+    @property
+    def nos(self):
+        '''!
+        @brief Retorna a lista de nós
+        '''
+        return self.__nos
+    
+    @property
+    def t(self):
+        '''!
+        @brief Retorna a lista de instantes de tempo
+        '''
+        return self.__t
+    
+    def tensoes(self, nos: list[str]|None = None):
+        '''!
+        @brief Obtem vetor de tensões nodais de todos ou alguns nós.
+        @param nos Lista de nós para obter as tensões nodais. Por padrão, retorna as tensões de todos os nós
+        @return Lista das tensões nodais
+        @details O formato da saída é:
+        [
+            [tensao_no_1, tensao_no_2, tensao_no_3, ...], # instante t0
+            [tensao_no_1, tensao_no_2, tensao_no_3, ...], # instante t1
+            [tensao_no_1, tensao_no_2, tensao_no_3, ...], # instante t2
+            ...
+        ]
+        '''
+        if nos is None:
+            return self.__resultado
+        else:
+            wanted = []
+            for no in nos:
+                wanted.append(self.__nos.index(no))
+            filtrado = []
+            for node in self.__resultado:
+                node_filtrado = []
+                for no_filtrado in wanted:
+                    node_filtrado.append(node[no_filtrado])
+                filtrado.append(node_filtrado)
+            return filtrado
+    
+    def plot_xt(self, nos: list[str]|None = None):
+        '''!
+        @brief Fazer gráfico das tensões nodais no tempo
+        @param nos Lista de nós para colocar no gráfico. Por padrão, plota as tensões de todos os nós
+        @returns Objeto de gráfico do Matplotlib
+        '''
+        import matplotlib.pyplot as plt
+        return plt.plot(self.t, self.tensoes(nos))
+
+    def plot_xy(self, no_x: str, no_y: str):
+        '''!
+        @brief Fazer gráfico X-Y das tensões nodais
+        @param no_x Nó do eixo X
+        @param no_y Nó do eixo Y
+        @returns Objeto de gráfico do Matplotlib
+        '''
+        import matplotlib.pyplot as plt
+        return plt.plot(self.tensoes([no_x]), self.tensoes([no_y]))
+
     def __setitem__(self, index, tuple):
         assert len(tuple) == 2
         t = tuple[0]
@@ -305,6 +362,9 @@ def import_resultado(filename: str):
 
 
 if __name__ == '__main__':
-    c = import_netlist('entrada.txt')
+    import sys
+    if len(sys.argv) != 3:
+        print('Uso:', sys.argv[0], '<arquivo-netlist> <arquivo-saida>')
+    c = import_netlist(sys.argv[1])
     resultado = c.run()
-    resultado.export('saida.txt')
+    resultado.export(sys.argv[2])
