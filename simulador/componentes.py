@@ -29,6 +29,10 @@ class Componente():
         Número de nós modificados.
     '''
     _num_nos_mod = 0
+    '''!
+    @var passo
+        Tamanho do passo (usado para simulação)
+    '''
     passo = 0.0  
 
     def __init__(self, name: str, nos: list[str]):
