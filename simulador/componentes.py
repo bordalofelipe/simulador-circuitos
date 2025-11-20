@@ -11,18 +11,23 @@ class Componente():
     A classe utiliza análise nodal modificada para resolver circuitos, onde cada componente
     contribui com sua estampa para as matrizes de condutância (Gn) e corrente (I).
 
-    @var _linear
-        Flag indicando se o componente é linear.
-    @var _num_nos
-        Número de nós do componente.
-    @var _num_nos_mod
-        Número de nós modificados.
-
     @author Equipe do Simulador de Circuitos
     @date 2025
     '''
+    '''!
+    @var _linear
+        Flag indicando se o componente é linear.
+    '''
     _linear = True
+    '''!
+    @var _num_nos
+        Número de nós do componente.
+    '''
     _num_nos = 0
+    '''!
+    @var _num_nos_mod
+        Número de nós modificados.
+    '''
     _num_nos_mod = 0
     passo = 0.0  
 
