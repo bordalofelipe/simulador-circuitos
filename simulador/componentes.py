@@ -137,9 +137,67 @@ class Componente():
             else:
                 valor = self.nivel_dc + self.amplitude*np.exp(-self.amortecimento*(t - self.atraso))*np.sin(2*np.pi*self.frequencia*(t-self.atraso) + np.pi/180*self.defasagem)
         elif self.tipo == 'PULSE':
-            tempo_total = self.ciclos*self.periodo
-            valor = 0
-            raise NotImplementedError
+            T1 = self.amplitude_1
+            T2 = self.amplitude_2
+            TD = self.atraso
+            PER = self.periodo
+
+            # REQUISITO: Se o tempo de subida/descida for zero, usa o passo da simulação
+            TR = self.tempo_subida if self.tempo_subida > 0 else self.passo
+            TF = self.tempo_descida if self.tempo_descida > 0 else self.passo
+
+            PW = self.tempo_ligado
+            N_CYCLES = self.ciclos
+
+            # Calcula o tempo total de operação da fonte
+            T_TOTAL_SIM = TD + N_CYCLES * PER
+
+            # 1. Fase de Atraso (Delay) [cite: 461]
+            if t < TD:
+                return T1
+
+            # 2. Fase de Fim (Finaliza na Amplitude 1 após ciclos) [cite: 465]
+            if N_CYCLES > 0 and t >= T_TOTAL_SIM:
+                return T1
+
+            # --- Início da Análise Periódica (t >= TD) ---
+
+            # Tempo dentro do ciclo (resetado a cada período)
+            t_cycle = (t - TD) % PER
+
+            # 3. Definição das Fases no Período:
+            T_RISE_END = TR
+            T_HIGH_END = TR + PW
+            T_FALL_END = TR + PW + TF
+
+            # 3a. Fase de Subida (Rise Time) - Rampa linear de T1 para T2 [cite: 462]
+            if t_cycle < T_RISE_END:
+                # Proporção: (tempo_dentro_subida / tempo_total_subida)
+                valor = T1 + (T2 - T1) * (t_cycle / TR)
+                return valor
+
+            # 3b. Fase Ligada (High Time) - Valor fixo em T2 [cite: 463]
+            elif t_cycle < T_HIGH_END:
+                return T2
+
+            # 3c. Fase de Descida (Fall Time) - Rampa linear de T2 para T1 [cite: 463]
+            elif t_cycle < T_FALL_END:
+                # t_on_fall: tempo decorrido desde o início da descida
+                t_on_fall = t_cycle - T_HIGH_END
+                # Proporção: (tempo_dentro_descida / tempo_total_descida)
+                valor = T2 - (T2 - T1) * (t_on_fall / TF)
+                return valor
+
+            # 3d. Fase Baixa (Idle Time) - Valor fixo em T1 [cite: 461]
+            elif t_cycle < PER:
+                return T1
+
+            # Fallback
+            return T1
+        # elif self.tipo == 'PULSE':
+        #     tempo_total = self.ciclos*self.periodo
+        #     valor = 0
+        #     raise NotImplementedError
         return valor
 
     def estampaBE(self, Gn, I, t, tensoes):
