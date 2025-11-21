@@ -19,14 +19,6 @@ class Circuito():
     @author Equipe do Simulador de Circuitos
     @date 2025
     '''
-    '''!
-    @var __componentes
-        Lista de componentes do circuito.
-    '''
-    '''!
-    @var __nos
-        Lista de nós do circuito.
-    '''
     def __init__(self, simulacao: str, tempo_total: float, passo: float, tipo_simulacao: str, passo_interno: int):
         '''!
         @brief Construtor da classe Circuito
@@ -297,18 +289,6 @@ class Resultado():
     @author Equipe do Simulador de Circuitos
     @date 2025
     '''
-    '''!
-    @var __nos
-        Lista de nós do circuito.
-    '''
-    '''!
-    @var __t
-        Lista de instantes de tempo da simulação.
-    '''
-    '''!
-    @var __resultado
-        Lista de listas contendo as tensões nodais em cada instante de tempo.
-    '''
     def __init__(self, nos: list[str], t: list[float], resultado: list[list[float]]):
         '''!
         @brief Construtor da classe Resultado
@@ -370,6 +350,34 @@ class Resultado():
         '''
         import matplotlib.pyplot as plt
         return plt.plot(self.t, self.tensoes(nos))
+
+    def plot_xt_um_no(self, no_y: str):
+        '''!
+        @brief Fazer gráfico das tensões nodais no tempo
+        @param no_y Nó referente ao eixo y.
+        @returns Objeto de gráfico do Matplotlib
+        '''
+        import matplotlib.pyplot as plt
+        return plt.plot(self.t, self.tensoes([no_y]))
+
+    def plot_xt_dois_nos(self, no_1: str, no_2: str):
+        '''
+        @brief Fazer gráfico X-Y das tensões nodais
+        @param no_1 Nó do primeiro traço do eixo x.
+        @param no_2 Nó do segundo traço do eixo x.
+        @returns Objeto de gráfico do Matplotlib
+        '''
+        import matplotlib.pyplot as plt
+        
+        plt.plot(self.t, self.tensoes([no_1]), label=no_1)
+        plt.plot(self.t, self.tensoes([no_2]), label=no_2)
+        
+        plt.legend()
+        plt.xlabel("tempo (s)")
+        plt.ylabel("tensão (V)")
+        
+        return plt
+
 
     def plot_xy(self, no_x: str, no_y: str):
         '''!
