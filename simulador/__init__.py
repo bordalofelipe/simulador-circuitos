@@ -1,8 +1,9 @@
 import numpy as np
 from simulador.componentes import *
 
-'''
-No terra
+'''!
+@var GND
+    No terra
 '''
 GND = '0'
 
