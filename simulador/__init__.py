@@ -9,7 +9,34 @@ GND = '0'
 
 
 class Circuito():
+    '''!
+    @brief Representa um circuito elétrico completo com seus componentes e parâmetros de simulação
+    @details Esta classe gerencia um circuito elétrico, seus componentes e executa simulações transientes
+    usando análise nodal modificada. Suporta componentes lineares e não lineares, utilizando
+    métodos de integração numérica (Backward Euler, Forward Euler, Trapezoidal) e iteração
+    de Newton-Raphson para componentes não lineares.
+
+    @author Equipe do Simulador de Circuitos
+    @date 2025
+    '''
+    '''!
+    @var __componentes
+        Lista de componentes do circuito.
+    '''
+    '''!
+    @var __nos
+        Lista de nós do circuito.
+    '''
     def __init__(self, simulacao: str, tempo_total: float, passo: float, tipo_simulacao: str, passo_interno: int):
+        '''!
+        @brief Construtor da classe Circuito
+        @param simulacao Tipo de simulação (ex: '.TRAN' para transiente, '.DC' para análise de corrente contínua)
+        @param tempo_total Tempo total de simulação em segundos
+        @param passo Tamanho do passo de integração em segundos. O passo de integração é o intervalo de tempo entre dois instantes de tempo consecutivos.
+        @param tipo_simulacao Tipo de método de integração: 'BE' (Backward Euler), 'FE' (Forward Euler) ou 'TRAP' (Trapezoidal). O método de integração é o algoritmo usado para calcular as tensões nodais ao longo do tempo.
+        @param passo_interno Número de passos internos por passo principal. O passo interno é o intervalo de tempo entre dois instantes de tempo consecutivos dentro de um passo principal.
+        @details Inicializa um circuito vazio com os parâmetros de simulação especificados.
+        '''
         self.simulacao = simulacao
         self.tempo_total = tempo_total
         self.tipo_simulacao = tipo_simulacao
@@ -36,6 +63,11 @@ class Circuito():
         return iter(self.__componentes)
 
     def append(self, componente):
+        '''!
+        @brief Adiciona um componente ao circuito
+        @param componente Componente a ser adicionado ao circuito
+        @details Adiciona um componente à lista de componentes do circuito.
+        '''
         if (isinstance(componente, Componente)):
             self.__componentes.append(componente)
 
@@ -46,6 +78,11 @@ class Circuito():
         return self.__delitem__(index)
 
     def __popular_nos(self):
+        '''!
+        @brief Popula a lista de nós do circuito a partir dos componentes
+        @exception Exception Se o circuito não tiver nó terra
+        @details Identifica todos os nós únicos dos componentes e garante que o nó terra (GND) seja o primeiro.
+        '''
         self.__nos = [GND]  # garante que o no terra eh o primeiro
         hasGround = False
         for comp in self.__componentes:
@@ -59,6 +96,13 @@ class Circuito():
             raise Exception('Circuito sem no terra')
 
     def run(self):
+        '''!
+        @brief Executa a simulação transiente do circuito
+        @return Objeto Resultado contendo as tensões nodais ao longo do tempo
+        @exception Exception Se a simulação falhar após M_MAX tentativas aleatórias
+        @details Executa a simulação transiente usando análise nodal modificada. Para circuitos não lineares,
+        utiliza iteração de Newton-Raphson. Suporta múltiplos métodos de integração numérica.
+        '''
         self.__popular_nos()
         print('Circuito com ' + str(self.__nos) + ' nos')
         nao_linear = False
@@ -166,6 +210,12 @@ class Circuito():
         return resultado
 
     def export(self, filename: str):
+        '''!
+        @brief Exporta o circuito para um arquivo netlist
+        @param filename Nome do arquivo onde salvar a netlist
+        @details Salva o circuito no formato netlist compatível com SPICE, incluindo todos os componentes
+        e parâmetros de simulação.
+        '''
         with open(filename, 'w') as f:
             self.__popular_nos()
             f.write(str(len(self.__nos)-1) + '\n')  # por causa do no terra, tirar 1
@@ -175,6 +225,14 @@ class Circuito():
 
 
 def import_netlist(filename: str):
+    '''!
+    @brief Importa um circuito a partir de um arquivo netlist
+    @param filename Nome do arquivo netlist a ser importado
+    @return Objeto Circuito com os componentes e parâmetros de simulação carregados do arquivo
+    @details Lê um arquivo netlist no formato SPICE e cria um objeto Circuito com todos os componentes
+    e parâmetros de simulação especificados no arquivo. Suporta todos os tipos de componentes
+    definidos no simulador.
+    '''
     with open(filename) as f:
         line = f.readline()  # nao usamos primeira linha
         componentes = []
@@ -230,7 +288,35 @@ def import_netlist(filename: str):
 
 
 class Resultado():
+    '''!
+    @brief Representa os resultados de uma simulação de circuito
+    @details Esta classe armazena e gerencia os resultados de uma simulação transiente, incluindo
+    as tensões nodais em cada instante de tempo. Fornece métodos para acessar, visualizar e exportar
+    os dados da simulação.
+
+    @author Equipe do Simulador de Circuitos
+    @date 2025
+    '''
+    '''!
+    @var __nos
+        Lista de nós do circuito.
+    '''
+    '''!
+    @var __t
+        Lista de instantes de tempo da simulação.
+    '''
+    '''!
+    @var __resultado
+        Lista de listas contendo as tensões nodais em cada instante de tempo.
+    '''
     def __init__(self, nos: list[str], t: list[float], resultado: list[list[float]]):
+        '''!
+        @brief Construtor da classe Resultado
+        @param nos Lista de nós do circuito
+        @param t Lista de instantes de tempo
+        @param resultado Lista de listas contendo as tensões nodais em cada instante de tempo
+        @details Inicializa um objeto Resultado vazio ou com dados pré-existentes.
+        '''
         self.__nos = nos
         self.__t = t
         self.__resultado = resultado
@@ -346,6 +432,13 @@ class Resultado():
 
 
 def import_resultado(filename: str):
+    '''!
+    @brief Importa resultados de simulação a partir de um arquivo
+    @param filename Nome do arquivo contendo os resultados da simulação
+    @return Objeto Resultado com os dados carregados do arquivo
+    @details Lê um arquivo de resultados no formato gerado pelo método export da classe Resultado,
+    contendo as tensões nodais em cada instante de tempo da simulação.
+    '''
     with open(filename) as f:
         line = f.readline()
         nos = line.replace('\n', '').split(' ')[1:]
