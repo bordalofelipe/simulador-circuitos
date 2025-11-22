@@ -33,7 +33,7 @@ class Componente():
     @var passo
         Tamanho do passo (usado para simulação)
     '''
-    passo = 0.0  
+    passo = 0.0
 
     def __init__(self, name: str, nos: list[str]):
         '''!
@@ -165,14 +165,12 @@ class Componente():
             if N_CYCLES > 0 and t >= T_TOTAL_SIM:
                 return T1
 
-
             t_cycle = (t - TD) % PER
 
             T_RISE_END = TR
             T_HIGH_END = TR + PW
             T_FALL_END = TR + PW + TF
 
-            
             if t_cycle < T_RISE_END:
                 valor = T1 + (T2 - T1) * (t_cycle / TR)
                 return valor
@@ -292,7 +290,7 @@ class Indutor(Componente):
     @brief Representa um indutor no circuito
     @details O indutor é um componente linear que armazena energia no campo magnético.
     Sua corrente e tensão estão relacionadas por: V = L * dI/dt.
-    
+
     @image html inductor_stamp.png "Estampa do Indutor"
     '''
     _linear = True
@@ -362,7 +360,7 @@ class Capacitor(Componente):
     @brief Representa um capacitor no circuito
     @details O capacitor é um componente linear que armazena energia no campo elétrico.
     Sua corrente e tensão estão relacionadas por: I = C * dV/dt.
-    
+
     @image html capacitor_stamp.png "Estampa do Capacitor"
     '''
     _linear = True
@@ -576,8 +574,8 @@ class FonteTensaoTensao(Componente):
 class FonteCorrenteCorrente(Componente):
     '''!
     @brief Representa uma fonte de corrente controlada por corrente no circuito
-    @details A fonte de corrente controlada por corrente é um componente 
-    linear que define a corrente de saída como proporcional a uma corrente de controle: 
+    @details A fonte de corrente controlada por corrente é um componente
+    linear que define a corrente de saída como proporcional a uma corrente de controle:
     I_out = F * I_in.
     '''
     _linear = True
@@ -632,7 +630,7 @@ class FonteCorrenteCorrente(Componente):
 class FonteCorrenteTensao(Componente):
     '''!
     @brief Representa uma fonte de corrente controlada por tensão no circuito.
-    @details A fonte de corrente controlada por tensão é um componente linear 
+    @details A fonte de corrente controlada por tensão é um componente linear
     que obedece à relação de transcondutância: I = G * V.
     '''
     _linear = True
@@ -756,7 +754,7 @@ class Diodo(Componente):
         @param name Nome único do diodo
         @param nos [nó_a, nó_b] nós do diodo
         @param valor Corrente de saturação em Amperes
-        @details O diodo conecta dois nós permitindo o fluxo de corrente preferencialmente 
+        @details O diodo conecta dois nós permitindo o fluxo de corrente preferencialmente
         do ânodo para o cátodo.
         '''
         super().__init__(name, nos)
@@ -779,9 +777,9 @@ class Diodo(Componente):
     def estampaBE(self, Gn, I, t, tensoes):
         '''!
         @brief Adiciona a estampa linearizada do diodo às matrizes do sistema.
-        @param Gn Matriz de condutância do sistema 
-        @param I Vetor de correntes do sistema 
-        @param t Instante de tempo atual 
+        @param Gn Matriz de condutância do sistema
+        @param I Vetor de correntes do sistema
+        @param t Instante de tempo atual
         @param tensoes Vetor de tensões nodais
         @return Tupla (Gn, I) com as matrizes atualizadas
         '''
@@ -872,7 +870,7 @@ class AmpOp(Componente):
 class Mosfet(Componente):
     '''!
     @brief Representa um MOSFET no circuito
-    @details O MOSFET é um componente não linear que 
+    @details O MOSFET é um componente não linear que
     gera uma corrente de dreno com relação de:
     Id = K * (Vgs - Vth)^2
 
@@ -932,7 +930,7 @@ class Mosfet(Componente):
 
         i_d = 0.0
         gm = 0.0
-        gds = 1e-9  
+        gds = 1e-9
 
         if self.tipo == 'N':
             vgs = vg - vs
@@ -940,13 +938,13 @@ class Mosfet(Componente):
             vth = self.Vth
 
             if vgs <= vth:
-                pass  
+                pass
             elif vds < (vgs - vth):
                 
                 i_d = self.beta * ((vgs - vth) * vds - 0.5 * vds**2)
                 gm = self.beta * vds
                 gds = self.beta * (vgs - vth - vds)
-            else:  
+            else:
                 i_d = 0.5 * self.beta * (vgs - vth)**2
                 gm = self.beta * (vgs - vth)
                 gds = 0.0
@@ -969,15 +967,15 @@ class Mosfet(Componente):
         elif self.tipo == 'P':
             vsg = vs - vg
             vsd = vs - vd
-            vth = abs(self.Vth)  
+            vth = abs(self.Vth)
 
             if vsg <= vth:
-                pass  
+                pass
             elif vsd < (vsg - vth):
                 i_d = self.beta * ((vsg - vth) * vsd - 0.5 * vsd**2)
                 gm = self.beta * vsd
                 gds = self.beta * (vsg - vth - vsd)
-            else: 
+            else:
                 i_d = 0.5 * self.beta * (vsg - vth)**2
                 gm = self.beta * (vsg - vth)
                 gds = 0.0

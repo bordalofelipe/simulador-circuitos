@@ -307,14 +307,14 @@ class Resultado():
         @brief Retorna a lista de nós
         '''
         return self.__nos
-    
+
     @property
     def t(self):
         '''!
         @brief Retorna a lista de instantes de tempo
         '''
         return self.__t
-    
+
     def tensoes(self, nos: str|list[str]|None = None):
         '''!
         @brief Obtem vetor de tensões nodais de todos ou alguns nós.
@@ -343,7 +343,7 @@ class Resultado():
                     node_filtrado.append(node[no_filtrado])
                 filtrado.append(node_filtrado)
             return filtrado
-    
+
     def plot_xt(self, nos: str|list[str]|None = None, xlabel='Tempo (s)', ylabel='Tensão (V)'):
         '''!
         @brief Fazer gráfico das tensões nodais no tempo
@@ -364,7 +364,6 @@ class Resultado():
         @param no_y Nó do eixo Y
         @returns Objeto de gráfico do Matplotlib
         '''
-        import matplotlib.pyplot as plt
         import matplotlib.pyplot as plt
         plot = plt.plot(self.tensoes(no_x), self.tensoes(no_y))
         plt.xlabel(no_x)
