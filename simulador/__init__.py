@@ -315,10 +315,10 @@ class Resultado():
         '''
         return self.__t
     
-    def tensoes(self, nos: list[str]|None = None):
+    def tensoes(self, nos: str|list[str]|None = None):
         '''!
         @brief Obtem vetor de tensões nodais de todos ou alguns nós.
-        @param nos Lista de nós para obter as tensões nodais. Por padrão, retorna as tensões de todos os nós
+        @param nos Nó ou lista de nós para obter as tensões nodais. Por padrão, retorna as tensões de todos os nós
         @return Lista das tensões nodais
         @details O formato da saída é:
         [
@@ -331,6 +331,8 @@ class Resultado():
         if nos is None:
             return self.__resultado
         else:
+            if type(nos) == str:
+                nos = [nos]
             wanted = []
             for no in nos:
                 wanted.append(self.__nos.index(no))
@@ -342,42 +344,18 @@ class Resultado():
                 filtrado.append(node_filtrado)
             return filtrado
     
-    def plot_xt(self, nos: list[str]|None = None):
+    def plot_xt(self, nos: str|list[str]|None = None, xlabel='Tempo (s)', ylabel='Tensão (V)'):
         '''!
         @brief Fazer gráfico das tensões nodais no tempo
-        @param nos Lista de nós para colocar no gráfico. Por padrão, plota as tensões de todos os nós
+        @param nos Nó ou lista de nós para colocar no gráfico. Por padrão, plota as tensões de todos os nós
         @returns Objeto de gráfico do Matplotlib
         '''
         import matplotlib.pyplot as plt
-        return plt.plot(self.t, self.tensoes(nos))
-
-    def plot_xt_um_no(self, no_y: str):
-        '''!
-        @brief Fazer gráfico das tensões nodais no tempo
-        @param no_y Nó referente ao eixo y.
-        @returns Objeto de gráfico do Matplotlib
-        '''
-        import matplotlib.pyplot as plt
-        return plt.plot(self.t, self.tensoes([no_y]))
-
-    def plot_xt_dois_nos(self, no_1: str, no_2: str):
-        '''
-        @brief Fazer gráfico X-Y das tensões nodais
-        @param no_1 Nó do primeiro traço do eixo x.
-        @param no_2 Nó do segundo traço do eixo x.
-        @returns Objeto de gráfico do Matplotlib
-        '''
-        import matplotlib.pyplot as plt
-        
-        plt.plot(self.t, self.tensoes([no_1]), label=no_1)
-        plt.plot(self.t, self.tensoes([no_2]), label=no_2)
-        
+        plot = plt.plot(self.t, self.tensoes(nos), label=nos)
         plt.legend()
-        plt.xlabel("tempo (s)")
-        plt.ylabel("tensão (V)")
-        
-        return plt
-
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        return plot
 
     def plot_xy(self, no_x: str, no_y: str):
         '''!
@@ -387,7 +365,11 @@ class Resultado():
         @returns Objeto de gráfico do Matplotlib
         '''
         import matplotlib.pyplot as plt
-        return plt.plot(self.tensoes([no_x]), self.tensoes([no_y]))
+        import matplotlib.pyplot as plt
+        plot = plt.plot(self.tensoes(no_x), self.tensoes(no_y))
+        plt.xlabel(no_x)
+        plt.ylabel(no_y)
+        return plot
 
     def __setitem__(self, index, tuple):
         assert len(tuple) == 2
