@@ -9,7 +9,26 @@ GND = '0'
 
 
 class Circuito():
+    '''!
+    @brief Representa um circuito elétrico completo com seus componentes e parâmetros de simulação
+    @details Esta classe gerencia um circuito elétrico, seus componentes e executa simulações transientes
+    usando análise nodal modificada. Suporta componentes lineares e não lineares, utilizando
+    métodos de integração numérica (Backward Euler, Forward Euler, Trapezoidal) e iteração
+    de Newton-Raphson para componentes não lineares.
+
+    @author Equipe do Simulador de Circuitos
+    @date 2025
+    '''
     def __init__(self, simulacao: str, tempo_total: float, passo: float, tipo_simulacao: str, passo_interno: int):
+        '''!
+        @brief Construtor da classe Circuito
+        @param simulacao Tipo de simulação (ex: '.TRAN' para transiente, '.DC' para análise de corrente contínua)
+        @param tempo_total Tempo total de simulação em segundos
+        @param passo Tamanho do passo de integração em segundos. O passo de integração é o intervalo de tempo entre dois instantes de tempo consecutivos.
+        @param tipo_simulacao Tipo de método de integração: 'BE' (Backward Euler), 'FE' (Forward Euler) ou 'TRAP' (Trapezoidal). O método de integração é o algoritmo usado para calcular as tensões nodais ao longo do tempo.
+        @param passo_interno Número de passos internos por passo principal. O passo interno é o intervalo de tempo entre dois instantes de tempo consecutivos dentro de um passo principal.
+        @details Inicializa um circuito vazio com os parâmetros de simulação especificados.
+        '''
         self.simulacao = simulacao
         self.tempo_total = tempo_total
         self.tipo_simulacao = tipo_simulacao
@@ -36,6 +55,11 @@ class Circuito():
         return iter(self.__componentes)
 
     def append(self, componente):
+        '''!
+        @brief Adiciona um componente ao circuito
+        @param componente Componente a ser adicionado ao circuito
+        @details Adiciona um componente à lista de componentes do circuito.
+        '''
         if (isinstance(componente, Componente)):
             self.__componentes.append(componente)
 
@@ -46,6 +70,11 @@ class Circuito():
         return self.__delitem__(index)
 
     def __popular_nos(self):
+        '''!
+        @brief Popula a lista de nós do circuito a partir dos componentes
+        @exception Exception Se o circuito não tiver nó terra
+        @details Identifica todos os nós únicos dos componentes e garante que o nó terra (GND) seja o primeiro.
+        '''
         self.__nos = [GND]  # garante que o no terra eh o primeiro
         hasGround = False
         for comp in self.__componentes:
@@ -59,15 +88,22 @@ class Circuito():
             raise Exception('Circuito sem no terra')
 
     def run(self):
+        '''!
+        @brief Executa a simulação transiente do circuito
+        @return Objeto Resultado contendo as tensões nodais ao longo do tempo
+        @exception Exception Se a simulação falhar após M_MAX tentativas aleatórias
+        @details Executa a simulação transiente usando análise nodal modificada. Para circuitos não lineares,
+        utiliza iteração de Newton-Raphson. Suporta múltiplos métodos de integração numérica.
+        '''
         self.__popular_nos()
-        print('Circuito com ' + str(self.__nos) + ' nos')
+        print('INFO: Circuito com ' + str(self.__nos) + ' nos')
         nao_linear = False
         for com in self.__componentes:  # aloca cada no para cada componente
             if not com.linear:
                 nao_linear = True
             com.set_posicao_nos([self.__nos.index(item) for item in com.nos])
             # Analise modificada
-            print(str(com) + ' precisa de ' + str(com.num_nos_mod) + ' nos extras. Alocando nos: ', end=' ')
+            print('INFO: ' + str(com) + ' precisa de ' + str(com.num_nos_mod) + ' nos extras. Alocando nos: ', end=' ')
             com.set_nos_mod([len(self.__nos) + i for i in range(com.num_nos_mod)])  # informa indices
             print(com._nos_mod)
             for i in range(com.num_nos_mod):  # adiciona nos modificados na lista de todos os nos
@@ -75,9 +111,9 @@ class Circuito():
                 self.__nos.append('J' + str(len(self.__nos)) + str(com).split(' ')[0])  # sintaxe moreirao
 
         num_vars = len(self.__nos) - 1  # Número de variáveis (nós - 1, pois terra é 0)
-        print('Circuito final com ' + str(num_vars) + ' variaveis')
+        print('INFO: Circuito final com ' + str(num_vars) + ' variaveis')
         if nao_linear:
-            print('Analise nao linear necessaria')
+            print('INFO: Analise nao linear necessaria')
 
         # --- Parâmetros da Análise no Tempo ---
         N_MAX = 50
@@ -109,9 +145,9 @@ class Circuito():
 
                     if nao_linear and n_newton_raphson == N_MAX:
                         if n_guesses >= M_MAX:
-                            raise Exception(f"Simulação falhou em t={tempo}s. O sistema é impossível de ser solucionado após {M_MAX} tentativas aleatórias.")
+                            raise Exception(f"ERRO: Simulação falhou em t={tempo}s. O sistema é impossível de ser solucionado após {M_MAX} tentativas aleatórias.")
                         # Gera novo chute aleatório
-                        print(f"Aviso: Falha na convergência (N={N_MAX}). Gerando chute aleatório {n_guesses+1}/{M_MAX}.")
+                        print(f"AVISO: Falha na convergência (N={N_MAX}). Gerando chute aleatório {n_guesses+1}/{M_MAX}.")
                         previous = list(np.random.rand(num_vars))
                         n_guesses += 1
                         n_newton_raphson = 0
@@ -162,10 +198,16 @@ class Circuito():
 
         # --- Fim do loop do tempo ---
 
-        print("Simulação concluída.")
+        print("INFO: Simulação concluída.")
         return resultado
 
     def export(self, filename: str):
+        '''!
+        @brief Exporta o circuito para um arquivo netlist
+        @param filename Nome do arquivo onde salvar a netlist
+        @details Salva o circuito no formato netlist compatível com SPICE, incluindo todos os componentes
+        e parâmetros de simulação.
+        '''
         with open(filename, 'w') as f:
             self.__popular_nos()
             f.write(str(len(self.__nos)-1) + '\n')  # por causa do no terra, tirar 1
@@ -175,6 +217,14 @@ class Circuito():
 
 
 def import_netlist(filename: str):
+    '''!
+    @brief Importa um circuito a partir de um arquivo netlist
+    @param filename Nome do arquivo netlist a ser importado
+    @return Objeto Circuito com os componentes e parâmetros de simulação carregados do arquivo
+    @details Lê um arquivo netlist no formato SPICE e cria um objeto Circuito com todos os componentes
+    e parâmetros de simulação especificados no arquivo. Suporta todos os tipos de componentes
+    definidos no simulador.
+    '''
     with open(filename) as f:
         line = f.readline()  # nao usamos primeira linha
         componentes = []
@@ -230,7 +280,23 @@ def import_netlist(filename: str):
 
 
 class Resultado():
+    '''!
+    @brief Representa os resultados de uma simulação de circuito
+    @details Esta classe armazena e gerencia os resultados de uma simulação transiente, incluindo
+    as tensões nodais em cada instante de tempo. Fornece métodos para acessar, visualizar e exportar
+    os dados da simulação.
+
+    @author Equipe do Simulador de Circuitos
+    @date 2025
+    '''
     def __init__(self, nos: list[str], t: list[float], resultado: list[list[float]]):
+        '''!
+        @brief Construtor da classe Resultado
+        @param nos Lista de nós do circuito
+        @param t Lista de instantes de tempo
+        @param resultado Lista de listas contendo as tensões nodais em cada instante de tempo
+        @details Inicializa um objeto Resultado vazio ou com dados pré-existentes.
+        '''
         self.__nos = nos
         self.__t = t
         self.__resultado = resultado
@@ -241,18 +307,18 @@ class Resultado():
         @brief Retorna a lista de nós
         '''
         return self.__nos
-    
+
     @property
     def t(self):
         '''!
         @brief Retorna a lista de instantes de tempo
         '''
         return self.__t
-    
-    def tensoes(self, nos: list[str]|None = None):
+
+    def tensoes(self, nos: str|list[str]|None = None):
         '''!
         @brief Obtem vetor de tensões nodais de todos ou alguns nós.
-        @param nos Lista de nós para obter as tensões nodais. Por padrão, retorna as tensões de todos os nós
+        @param nos Nó ou lista de nós para obter as tensões nodais. Por padrão, retorna as tensões de todos os nós
         @return Lista das tensões nodais
         @details O formato da saída é:
         [
@@ -265,6 +331,8 @@ class Resultado():
         if nos is None:
             return self.__resultado
         else:
+            if type(nos) == str:
+                nos = [nos]
             wanted = []
             for no in nos:
                 wanted.append(self.__nos.index(no))
@@ -275,15 +343,19 @@ class Resultado():
                     node_filtrado.append(node[no_filtrado])
                 filtrado.append(node_filtrado)
             return filtrado
-    
-    def plot_xt(self, nos: list[str]|None = None):
+
+    def plot_xt(self, nos: str|list[str]|None = None, xlabel='Tempo (s)', ylabel='Tensão (V)'):
         '''!
         @brief Fazer gráfico das tensões nodais no tempo
-        @param nos Lista de nós para colocar no gráfico. Por padrão, plota as tensões de todos os nós
+        @param nos Nó ou lista de nós para colocar no gráfico. Por padrão, plota as tensões de todos os nós
         @returns Objeto de gráfico do Matplotlib
         '''
         import matplotlib.pyplot as plt
-        return plt.plot(self.t, self.tensoes(nos))
+        plot = plt.plot(self.t, self.tensoes(nos), label=nos)
+        plt.legend()
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        return plot
 
     def plot_xy(self, no_x: str, no_y: str):
         '''!
@@ -293,7 +365,10 @@ class Resultado():
         @returns Objeto de gráfico do Matplotlib
         '''
         import matplotlib.pyplot as plt
-        return plt.plot(self.tensoes([no_x]), self.tensoes([no_y]))
+        plot = plt.plot(self.tensoes(no_x), self.tensoes(no_y))
+        plt.xlabel(no_x)
+        plt.ylabel(no_y)
+        return plot
 
     def __setitem__(self, index, tuple):
         assert len(tuple) == 2
@@ -346,10 +421,16 @@ class Resultado():
 
 
 def import_resultado(filename: str):
+    '''!
+    @brief Importa resultados de simulação a partir de um arquivo
+    @param filename Nome do arquivo contendo os resultados da simulação
+    @return Objeto Resultado com os dados carregados do arquivo
+    @details Lê um arquivo de resultados no formato gerado pelo método export da classe Resultado,
+    contendo as tensões nodais em cada instante de tempo da simulação.
+    '''
     with open(filename) as f:
         line = f.readline()
         nos = line.replace('\n', '').split(' ')[1:]
-        print(nos, 'a', len(nos))
         resultado = Resultado(nos, [], [])
         line = f.readline()
         while line != '':
