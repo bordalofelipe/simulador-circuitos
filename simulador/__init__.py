@@ -96,14 +96,14 @@ class Circuito():
         utiliza iteração de Newton-Raphson. Suporta múltiplos métodos de integração numérica.
         '''
         self.__popular_nos()
-        print('Circuito com ' + str(self.__nos) + ' nos')
+        print('INFO: Circuito com ' + str(self.__nos) + ' nos')
         nao_linear = False
         for com in self.__componentes:  # aloca cada no para cada componente
             if not com.linear:
                 nao_linear = True
             com.set_posicao_nos([self.__nos.index(item) for item in com.nos])
             # Analise modificada
-            print(str(com) + ' precisa de ' + str(com.num_nos_mod) + ' nos extras. Alocando nos: ', end=' ')
+            print('INFO: ' + str(com) + ' precisa de ' + str(com.num_nos_mod) + ' nos extras. Alocando nos: ', end=' ')
             com.set_nos_mod([len(self.__nos) + i for i in range(com.num_nos_mod)])  # informa indices
             print(com._nos_mod)
             for i in range(com.num_nos_mod):  # adiciona nos modificados na lista de todos os nos
@@ -111,9 +111,9 @@ class Circuito():
                 self.__nos.append('J' + str(len(self.__nos)) + str(com).split(' ')[0])  # sintaxe moreirao
 
         num_vars = len(self.__nos) - 1  # Número de variáveis (nós - 1, pois terra é 0)
-        print('Circuito final com ' + str(num_vars) + ' variaveis')
+        print('INFO: Circuito final com ' + str(num_vars) + ' variaveis')
         if nao_linear:
-            print('Analise nao linear necessaria')
+            print('INFO: Analise nao linear necessaria')
 
         # --- Parâmetros da Análise no Tempo ---
         N_MAX = 50
@@ -145,9 +145,9 @@ class Circuito():
 
                     if nao_linear and n_newton_raphson == N_MAX:
                         if n_guesses >= M_MAX:
-                            raise Exception(f"Simulação falhou em t={tempo}s. O sistema é impossível de ser solucionado após {M_MAX} tentativas aleatórias.")
+                            raise Exception(f"ERRO: Simulação falhou em t={tempo}s. O sistema é impossível de ser solucionado após {M_MAX} tentativas aleatórias.")
                         # Gera novo chute aleatório
-                        print(f"Aviso: Falha na convergência (N={N_MAX}). Gerando chute aleatório {n_guesses+1}/{M_MAX}.")
+                        print(f"AVISO: Falha na convergência (N={N_MAX}). Gerando chute aleatório {n_guesses+1}/{M_MAX}.")
                         previous = list(np.random.rand(num_vars))
                         n_guesses += 1
                         n_newton_raphson = 0
@@ -198,7 +198,7 @@ class Circuito():
 
         # --- Fim do loop do tempo ---
 
-        print("Simulação concluída.")
+        print("INFO: Simulação concluída.")
         return resultado
 
     def export(self, filename: str):
@@ -432,7 +432,6 @@ def import_resultado(filename: str):
     with open(filename) as f:
         line = f.readline()
         nos = line.replace('\n', '').split(' ')[1:]
-        print(nos, 'a', len(nos))
         resultado = Resultado(nos, [], [])
         line = f.readline()
         while line != '':
