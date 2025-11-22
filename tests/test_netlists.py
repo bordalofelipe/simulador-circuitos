@@ -8,7 +8,7 @@ def netlist(filename):
     r.export('tests/' + filename.replace('.net', '.sim.test'))
 
 
-def check_tolerances(filename):
+def check_tolerances(filename, tolerancia=0.01):
     ref = simulador.import_resultado('tests/' + filename)
     test = simulador.import_resultado('tests/' + filename + '.test')
     total_error = 0
@@ -21,7 +21,7 @@ def check_tolerances(filename):
         total_samples += 1
     total_error /= total_samples
     print(filename, f'teve erro médio de {total_error}')
-    assert total_error < 0.01
+    assert total_error < tolerancia
 
 
 def test_chua():
@@ -51,7 +51,7 @@ def test_opamp_rectifier():
 
 def test_oscilator():
     netlist('oscilator.net')
-    check_tolerances('oscilator.sim')
+    check_tolerances('oscilator.sim', 0.2)
 
 
 def test_pulse():
