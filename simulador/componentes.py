@@ -891,6 +891,7 @@ class Mosfet(Componente):
         @brief Construtor do MOSFET.
         @param name Nome do componente.
         @param nos Lista de nós no formato ['D', 'G', 'S'].
+        @param tipo Tipo do MOSFET: 'N' ou 'P'
         @param W parâmetro W do MOSFET.
         @param L parâmetro L do MOSFET.
         @param lbda parâmetro lambda do MOSFET.
@@ -898,13 +899,24 @@ class Mosfet(Componente):
         @param Vth parâmetro Vth (tensão) do MOSFET.
         '''
         super().__init__(name, nos)
+        assert tipo == 'N' or tipo == 'P'
         self.tipo = tipo
         self.W = W
         self.L = L
+        self.lbda = lbda
         self.K = K
         self.Vth = Vth
-        self.lbda = lbda
         self.beta = self.K * (self.W / self.L)
+        self.transcondutancia = FonteCorrenteTensao(name, [nos[0], nos[1], nos[2], nos[1]], 0.0)
+        self.fonte = FonteCorrente(name, [nos[0], nos[1]], ['DC', 0.0])
+        self.condutancia = Resistor(name, [nos[0], nos[1]], 1000)
+
+    def set_posicao_nos(self, posicoes: list[int]):
+        self.first_iter = True
+        self.transcondutancia.set_posicao_nos([posicoes[0], posicoes[1], posicoes[2], posicoes[1]])
+        self.fonte.set_posicao_nos([posicoes[0], posicoes[1]])
+        self.condutancia.set_posicao_nos([posicoes[0], posicoes[1]])
+        super().set_posicao_nos(posicoes)
 
     def __str__(self):
         '''!
@@ -928,72 +940,53 @@ class Mosfet(Componente):
         vg = tensoes[g]
         vs = tensoes[s]
 
-        i_d = 0.0
-        gm = 0.0
-        gds = 1e-9
-
         if self.tipo == 'N':
-            vgs = vg - vs
+            if self.first_iter:
+                vgs = 2
+                self.first_iter = False
+            else:
+                vgs = vg - vs
+            # vgs = vg - vs
             vds = vd - vs
-            vth = self.Vth
-
-            if vgs <= vth:
-                pass
-            elif vds < (vgs - vth):
-                
-                i_d = self.beta * ((vgs - vth) * vds - 0.5 * vds**2)
-                gm = self.beta * vds
-                gds = self.beta * (vgs - vth - vds)
-            else:
-                i_d = 0.5 * self.beta * (vgs - vth)**2
-                gm = self.beta * (vgs - vth)
-                gds = 0.0
-
-            ieq = i_d - gm * vgs - gds * vds
-
-            Gn[d, d] += gds
-            Gn[d, s] -= gds
-            Gn[s, d] -= gds
-            Gn[s, s] += gds
-
-            Gn[d, g] += gm
-            Gn[d, s] -= gm
-            Gn[s, g] -= gm
-            Gn[s, s] += gm
-
-            I[d] -= ieq
-            I[s] += ieq
-
         elif self.tipo == 'P':
-            vsg = vs - vg
-            vsd = vs - vd
-            vth = abs(self.Vth)
-
-            if vsg <= vth:
-                pass
-            elif vsd < (vsg - vth):
-                i_d = self.beta * ((vsg - vth) * vsd - 0.5 * vsd**2)
-                gm = self.beta * vsd
-                gds = self.beta * (vsg - vth - vsd)
+            if self.first_iter:
+                vgs = -2
+                self.first_iter = False
             else:
-                i_d = 0.5 * self.beta * (vsg - vth)**2
-                gm = self.beta * (vsg - vth)
-                gds = 0.0
+                vgs = -1 * (vg - vs)
+            # vgs = -1 * (vg - vs)
+            vds = -1 * (vd - vs)
+        else:
+            raise Exception('Tipo de MOSFET inválido!')
 
-            ieq = i_d - gm * vsg - gds * vsd
+        id = 0.0
+        gm = 0.0
+        gds = 0.0
 
-            Gn[s, s] += gds
-            Gn[s, d] -= gds
-            Gn[d, s] -= gds
-            Gn[d, d] += gds
+        # self.beta = self.K * (self.W / self.L)
+        if vds > (vgs - self.Vth) and vds > self.Vth:
+            #print('INFO: MOSFET em saturação')
+            gm = self.beta * ( 2 * ( vgs - self.Vth ) * ( 1 + self.lbda * vds ) )
+            id = self.beta * ( ( vgs -  self.Vth ) ** 2 ) * ( self.lbda * vds )
+            gds = self.beta * ( ( vgs -  self.Vth ) ** 2 ) * self.lbda
+        elif vds <= (vgs - self.Vth) and vds > self.Vth:
+            #print('INFO: MOSFET em triodo')
+            id = self.beta * ( 2 * ( vgs - self.Vth ) * vds ** 2 ) * ( 1 + self.lbda * vds )
+            gm = self.beta * ( 2 * vds * ( 1 + self.lbda * vds ) )
+            gds = self.beta * ( 2 * ( vds - self.Vth ) - 2 * vds + 4 * self.lbda * ( vgs - self.Vth ) - 3 * self.lbda * vds ** 2 )    
+        else:
+            #print('INFO: MOSFET em corte')
+            pass
 
-            Gn[s, g] -= gm
-            Gn[s, s] += gm
-            Gn[d, g] += gm
-            Gn[d, s] -= gm
-
-            I[s] -= ieq
-            I[d] += ieq
+        self.transcondutancia.valor = gm
+        self.fonte.nivel_dc = id
+        if gds != 0.0:
+            self.condutancia.valor = 1/gds
+        
+        Gn, I = self.transcondutancia.estampaBE(Gn, I, t, tensoes)
+        Gn, I = self.fonte.estampaBE(Gn, I, t, tensoes)
+        if gds != 0.0:
+            Gn, I = self.condutancia.estampaBE(Gn, I, t, tensoes)
 
         return Gn, I
 
