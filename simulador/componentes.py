@@ -965,24 +965,24 @@ class Mosfet(Componente):
 
         # self.beta = self.K * (self.W / self.L)
         if vds > (vgs - self.Vth) and vds > self.Vth:
-            #print('INFO: MOSFET em saturação')
+            # print('INFO: MOSFET em saturação')
             gm = self.beta * ( 2 * ( vgs - self.Vth ) * ( 1 + self.lbda * vds ) )
-            id = self.beta * ( ( vgs -  self.Vth ) ** 2 ) * ( self.lbda * vds )
-            gds = self.beta * ( ( vgs -  self.Vth ) ** 2 ) * self.lbda
+            id = self.beta * ( ( vgs - self.Vth ) ** 2 ) * ( self.lbda * vds )
+            gds = self.beta * ( ( vgs - self.Vth ) ** 2 ) * self.lbda
         elif vds <= (vgs - self.Vth) and vds > self.Vth:
-            #print('INFO: MOSFET em triodo')
+            # print('INFO: MOSFET em triodo')
             id = self.beta * ( 2 * ( vgs - self.Vth ) * vds ** 2 ) * ( 1 + self.lbda * vds )
             gm = self.beta * ( 2 * vds * ( 1 + self.lbda * vds ) )
-            gds = self.beta * ( 2 * ( vds - self.Vth ) - 2 * vds + 4 * self.lbda * ( vgs - self.Vth ) - 3 * self.lbda * vds ** 2 )    
+            gds = self.beta * ( 2 * ( vds - self.Vth ) - 2 * vds + 4 * self.lbda * ( vgs - self.Vth ) - 3 * self.lbda * vds ** 2 )
         else:
-            #print('INFO: MOSFET em corte')
+            # print('INFO: MOSFET em corte')
             pass
 
         self.transcondutancia.valor = gm
         self.fonte.nivel_dc = id
         if gds != 0.0:
             self.condutancia.valor = 1/gds
-        
+
         Gn, I = self.transcondutancia.estampaBE(Gn, I, t, tensoes)
         Gn, I = self.fonte.estampaBE(Gn, I, t, tensoes)
         if gds != 0.0:
