@@ -11,6 +11,7 @@ def netlist(filename):
 def check_tolerances(filename, tolerancia=0.01):
     ref = simulador.import_resultado('tests/' + filename)
     test = simulador.import_resultado('tests/' + filename + '.test')
+    assert ref.nos == test.nos
     total_error = 0
     total_samples = 0
     for r, t in zip(ref, test):
