@@ -128,8 +128,8 @@ class Componente():
             self.amplitude_1 = float(args[1])
             self.amplitude_2 = float(args[2])
             self.atraso = float(args[3])
-            self.tempo_descida = float(args[4])
-            self.tempo_subida = float(args[5])
+            self.tempo_subida = float(args[4])   # Era args[5]
+            self.tempo_descida = float(args[5])  # Era args[4]
             self.tempo_ligado = float(args[6])
             self.periodo = float(args[7])
             self.ciclos = float(args[8])
@@ -339,18 +339,18 @@ class Indutor(Componente):
         no_a = self._posicao_nos[0]
         no_b = self._posicao_nos[1]
 
-        no_corrente = self._nos_mod[0]
+        corrente_jx = self._nos_mod[0]
 
-        Gn[no_a, no_corrente] += 1
-        Gn[no_b, no_corrente] -= 1
-        Gn[no_corrente, no_a] -= 1
-        Gn[no_corrente, no_b] += 1
-        Gn[no_corrente, no_corrente] += self.valor/self.passo
+        Gn[no_a, corrente_jx] += 1
+        Gn[no_b, corrente_jx] -= 1
+        Gn[corrente_jx, no_a] -= 1
+        Gn[corrente_jx, no_b] += 1
+        Gn[corrente_jx, corrente_jx] += self.valor/self.passo
 
         if t == 0.0:
-            I[no_corrente] += (self.valor/self.passo)*self.ic
+            I[corrente_jx] += (self.valor/self.passo)*self.ic
         else:
-            I[no_corrente] += (self.valor/self.passo)*self.previous
+            I[corrente_jx] += (self.valor/self.passo)*self.previous
 
         return Gn, I
 
@@ -475,7 +475,7 @@ class ResistorNaoLinear(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação do resistor não linear como linha da netlist
-        @return String no formato "N<nome> <nó_pos> <nó_neg> <v1> <i1> <v2> <i2> <v3> <i3> <v4> <i4>"
+        @return String no formato "N<nome> <nó_a> <nó_b> <v1> <i1> <v2> <i2> <v3> <i3> <v4> <i4>"
         @details Formato específico para resistor não linear com 4 pontos.
         '''
         return 'N' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.v1) + ' ' + str(self.i1) + ' ' + str(self.v2) + ' ' + str(self.i2) + ' ' + str(self.v3) + ' ' + str(self.i3) + ' ' + str(self.v4) + ' ' + str(self.i4)
@@ -540,7 +540,7 @@ class FonteTensaoTensao(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação da fonte como linha da netlist
-        @return String no formato "E<nome> <nó_saída_pos> <nó_saída_neg> <nó_controle_pos> <nó_controle_neg> <ganho>"
+        @return String no formato "E<nome> <nó_a> <nó_b> <nó_c> <nó_d> <ganho>"
         @details Formato compatível com SPICE para fonte de tensão controlada por tensão.
         '''
         return 'E' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
@@ -554,19 +554,19 @@ class FonteTensaoTensao(Componente):
         @param tensoes Vetor de tensões nodais no tempo atual
         @return Tupla (Gn, I) com as matrizes atualizadas
         '''
-        no_saida_pos = self._posicao_nos[0]
-        no_saida_neg = self._posicao_nos[1]
-        no_controle_pos = self._posicao_nos[2]
-        no_controle_neg = self._posicao_nos[3]
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
+        no_c = self._posicao_nos[2]
+        no_d = self._posicao_nos[3]
 
-        no_corrente = self._nos_mod[0]
+        corrente_jx = self._nos_mod[0]
 
-        Gn[no_saida_pos, no_corrente] += 1
-        Gn[no_saida_neg, no_corrente] -= 1
-        Gn[no_corrente, no_controle_pos] += self.valor
-        Gn[no_corrente, no_controle_neg] -= self.valor
-        Gn[no_corrente, no_saida_pos] -= 1
-        Gn[no_corrente, no_saida_neg] += 1
+        Gn[no_a, corrente_jx] += 1
+        Gn[no_b, corrente_jx] -= 1
+        Gn[corrente_jx, no_c] += self.valor
+        Gn[corrente_jx, no_d] -= self.valor
+        Gn[corrente_jx, no_a] -= 1
+        Gn[corrente_jx, no_b] += 1
 
         return Gn, I
 
@@ -596,7 +596,7 @@ class FonteCorrenteCorrente(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação da fonte como linha da netlist
-        @return String no formato "F<nome> <nó_saída_pos> <nó_saída_neg> <nó_controle_pos> <nó_controle_neg> <ganho>"
+        @return String no formato "F<nome> <nó_a> <nó_b> <nó_c> <nó_d> <ganho>"
         @details Formato compatível com SPICE para fonte de tensão controlada por tensão.
         '''
         return 'F' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
@@ -610,19 +610,19 @@ class FonteCorrenteCorrente(Componente):
         @param tensoes Vetor de tensões nodais (não usado para resistor)
         @return Tupla (Gn, I) com as matrizes atualizadas
         '''
-        no_saida_pos = self._posicao_nos[0]
-        no_saida_neg = self._posicao_nos[1]
-        no_controle_pos = self._posicao_nos[2]
-        no_controle_neg = self._posicao_nos[3]
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
+        no_c = self._posicao_nos[2]
+        no_d = self._posicao_nos[3]
 
-        no_corrente = self._nos_mod[0]
+        corrente_jx = self._nos_mod[0]
 
-        Gn[no_saida_pos, no_corrente] -= self.valor
-        Gn[no_saida_neg, no_corrente] += self.valor
-        Gn[no_controle_pos, no_corrente] += 1
-        Gn[no_controle_neg, no_corrente] -= 1
-        Gn[no_corrente, no_controle_pos] -= 1
-        Gn[no_corrente, no_controle_neg] += 1
+        Gn[no_a, corrente_jx] -= self.valor
+        Gn[no_b, corrente_jx] += self.valor
+        Gn[no_c, corrente_jx] += 1
+        Gn[no_d, corrente_jx] -= 1
+        Gn[corrente_jx, no_c] -= 1
+        Gn[corrente_jx, no_d] += 1
 
         return Gn, I
 
@@ -651,7 +651,7 @@ class FonteCorrenteTensao(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação da fonte como linha da netlist
-        @return String no formato "G<nome> <nó_saída_pos> <nó_saída_neg> <nó_controle_pos> <nó_controle_neg> <ganho>"
+        @return String no formato "G<nome> <nó_a> <nó_b> <nó_c> <nó_b> <ganho>"
         @details Formato compatível com SPICE para fonte de tensão controlada por tensão.
         '''
         return 'G' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
@@ -665,15 +665,15 @@ class FonteCorrenteTensao(Componente):
         @param tensoes Vetor de tensões nodais no tempo atual
         @return Tupla (Gn, I) com as matrizes atualizadas
         '''
-        no_saida_pos = self._posicao_nos[0]
-        no_saida_neg = self._posicao_nos[1]
-        no_controle_pos = self._posicao_nos[2]
-        no_controle_neg = self._posicao_nos[3]
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
+        no_c = self._posicao_nos[2]
+        no_d = self._posicao_nos[3]
 
-        Gn[no_saida_pos, no_controle_pos] += self.valor
-        Gn[no_saida_pos, no_controle_neg] -= self.valor
-        Gn[no_saida_neg, no_controle_pos] -= self.valor
-        Gn[no_saida_neg, no_controle_neg] += self.valor
+        Gn[no_a, no_c] += self.valor
+        Gn[no_a, no_d] -= self.valor
+        Gn[no_b, no_c] -= self.valor
+        Gn[no_b, no_d] += self.valor
 
         return Gn, I
 
@@ -703,7 +703,7 @@ class FonteTensaoCorrente(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação da fonte como linha da netlist
-        @return String no formato "H<nome> <nó_saída_pos> <nó_saída_neg> <nó_controle_pos> <nó_controle_neg> <ganho>"
+        @return String no formato "H<nome> <nó_a> <nó_b> <nó_c> <nó_d> <ganho>"
         @details Formato compatível com SPICE para fonte de tensão controlada por tensão.
         '''
         return 'H' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor)
@@ -717,23 +717,23 @@ class FonteTensaoCorrente(Componente):
         @param tensoes Vetor de tensões nodais no tempo atual
         @return Tupla (Gn, I) com as matrizes atualizadas
         '''
-        no_saida_pos = self._posicao_nos[0]
-        no_saida_neg = self._posicao_nos[1]
-        no_controle_pos = self._posicao_nos[2]
-        no_controle_neg = self._posicao_nos[3]
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
+        no_c = self._posicao_nos[2]
+        no_d = self._posicao_nos[3]
 
-        no_corrente1 = self._nos_mod[0]
-        no_corrente2 = self._nos_mod[1]
+        corrente_jx = self._nos_mod[0]
+        corrente_jy = self._nos_mod[1]
 
-        Gn[no_saida_pos, no_corrente1] -= 1
-        Gn[no_saida_neg, no_corrente1] += 1
-        Gn[no_controle_pos, no_corrente2] -= 1
-        Gn[no_controle_neg, no_corrente2] += 1
-        Gn[no_corrente1, no_saida_pos] += 1
-        Gn[no_corrente1, no_saida_neg] -= 1
-        Gn[no_corrente2, no_controle_pos] += 1
-        Gn[no_corrente2, no_controle_neg] -= 1
-        Gn[no_corrente2, no_corrente1] += self.valor
+        Gn[no_a, corrente_jx] -= 1
+        Gn[no_b, corrente_jx] += 1
+        Gn[no_c, corrente_jy] -= 1
+        Gn[no_d, corrente_jy] += 1
+        Gn[corrente_jx, no_a] += 1
+        Gn[corrente_jx, no_b] -= 1
+        Gn[corrente_jy, no_c] += 1
+        Gn[corrente_jy, no_d] -= 1
+        Gn[corrente_jy, corrente_jx] += self.valor
 
         return Gn, I
 
@@ -769,7 +769,7 @@ class Diodo(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação do diodo como linha da netlist
-        @return String no formato "D<nome> <nó_a> <nó->"
+        @return String no formato "D<nome> <nó_a> <nó_b>"
         @details Formato específico para diodo com dois terminais.
         '''
         return 'D' + self.name + ' ' + ' '.join(str(no) for no in self.nos)
@@ -783,8 +783,10 @@ class Diodo(Componente):
         @param tensoes Vetor de tensões nodais
         @return Tupla (Gn, I) com as matrizes atualizadas
         '''
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
 
-        vab = tensoes[self._posicao_nos[0]] - tensoes[self._posicao_nos[1]]
+        vab = tensoes[no_a] - tensoes[no_b]
 
         if vab > 0.9:
             vab = 0.9
@@ -822,7 +824,7 @@ class AmpOp(Componente):
         '''!
         @brief Construtor do Amplificador Operacional
         @param name Nome único do ampop
-        @param nos Lista com quatro nós: [nó_a, nó_b, nó_c, nó_d]
+        @param nos Lista com três nós: [nó_a, nó_b, nó_c]
         @param valor Ganho de malha aberta
         @details O ampop amplifica a diferença de tensão entre as entradas (V+ - V-) aplicando-a na saída.
         '''
@@ -831,7 +833,7 @@ class AmpOp(Componente):
     def __str__(self):
         '''!
         @brief Retorna representação do amplificador operacional ideal como linha da netlist
-        @return String no formato "O<nome> <nó_a> <nó-> <nó_bsaida>"
+        @return String no formato "O<nome> <nó_a> <nó_b> <nó_c>"
         @details Formato compatível com SPICE para para amplificador operacional ideal com dois terminais.
         '''
         return 'O' + self.name + ' ' + ' '.join(str(no) for no in self.nos)
@@ -845,24 +847,16 @@ class AmpOp(Componente):
         @param tensoes Vetor de tensões nodais (não utilizado para o modelo linear ideal)
         @return Tupla (Gn, I) com as matrizes atualizadas
         '''
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
+        no_c = self._posicao_nos[2]
 
-        no_corrente = self._nos_mod[0]
+        corrente_jx = self._nos_mod[0]
 
-        '''
-        # Contribuições para a equação V+ - V- = 0
-        Gn[self._posicao_nos[0], no_corrente] -= 1  # -V+
-        Gn[self._posicao_nos[1], no_corrente] += 1  # +V-
+        Gn[no_c, corrente_jx] += 1
 
-        # Equação da corrente de saída
-        Gn[no_corrente, self._posicao_nos[0]] += 1   # +V+
-        Gn[no_corrente, self._posicao_nos[1]] -= 1   # -V-
-        Gn[no_corrente, self._posicao_nos[2]] += 1   # +Vout
-        '''
-
-        Gn[self._posicao_nos[2], no_corrente] += 1
-
-        Gn[no_corrente, self._posicao_nos[0]] -= 1
-        Gn[no_corrente, self._posicao_nos[1]] += 1
+        Gn[corrente_jx, no_a] -= 1
+        Gn[corrente_jx, no_b] += 1
 
         return Gn, I
 
@@ -907,9 +901,9 @@ class Mosfet(Componente):
         self.K = K
         self.Vth = Vth
         self.beta = self.K * (self.W / self.L)
-        self.transcondutancia = FonteCorrenteTensao(name, [nos[0], nos[1], nos[2], nos[1]], 0.0)
-        self.fonte = FonteCorrente(name, [nos[0], nos[1]], ['DC', 0.0])
-        self.condutancia = Resistor(name, [nos[0], nos[1]], 1000)
+        self.transcondutancia = FonteCorrenteTensao(name, [nos[0], nos[2], nos[1], nos[2]], 0.0)
+        self.fonte = FonteCorrente(name, [nos[0], nos[2]], ['DC', 0.0])
+        self.condutancia = Resistor(name, [nos[0], nos[2]], 1000)
 
     def set_posicao_nos(self, posicoes: list[int]):
         self.first_iter = True
@@ -1031,8 +1025,11 @@ class FonteCorrente(Componente):
         '''
         corrente = self.calcular_valor_fonte(t)
 
-        I[self._posicao_nos[0]] -= corrente
-        I[self._posicao_nos[1]] += corrente
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
+
+        I[no_a] -= corrente
+        I[no_b] += corrente
         return Gn, I
 
 
@@ -1076,10 +1073,15 @@ class FonteTensao(Componente):
         '''
         tensao = self.calcular_valor_fonte(t)
 
-        Gn[self._posicao_nos[0], self._nos_mod[0]] += 1
-        Gn[self._posicao_nos[1], self._nos_mod[0]] -= 1
-        Gn[self._nos_mod[0], self._posicao_nos[0]] -= 1
-        Gn[self._nos_mod[0], self._posicao_nos[1]] += 1
+        no_a = self._posicao_nos[0]
+        no_b = self._posicao_nos[1]
 
-        I[self._nos_mod[0]] -= tensao
+        corrente_jx = self._nos_mod[0]
+
+        Gn[no_a, corrente_jx] += 1
+        Gn[no_b, corrente_jx] -= 1
+        Gn[corrente_jx, no_a] -= 1
+        Gn[corrente_jx, no_b] += 1
+
+        I[corrente_jx] -= tensao
         return Gn, I
