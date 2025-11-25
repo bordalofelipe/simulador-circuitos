@@ -907,9 +907,9 @@ class Mosfet(Componente):
 
     def set_posicao_nos(self, posicoes: list[int]):
         self.first_iter = True
-        self.transcondutancia.set_posicao_nos([posicoes[0], posicoes[1], posicoes[2], posicoes[1]])
-        self.fonte.set_posicao_nos([posicoes[0], posicoes[1]])
-        self.condutancia.set_posicao_nos([posicoes[0], posicoes[1]])
+        self.transcondutancia.set_posicao_nos([posicoes[0], posicoes[2], posicoes[1], posicoes[2]])
+        self.fonte.set_posicao_nos([posicoes[0], posicoes[2]])
+        self.condutancia.set_posicao_nos([posicoes[0], posicoes[2]])
         super().set_posicao_nos(posicoes)
 
     def __str__(self):
@@ -934,52 +934,84 @@ class Mosfet(Componente):
         vg = tensoes[g]
         vs = tensoes[s]
 
+        # Lógica de Inversão e Definição de Vgs/Vds (Baseado na Imagem 2)
+        # Permite que o transistor conduza nos dois sentidos (Source vira Dreno)
+        
         if self.tipo == 'N':
+            if vd < vs:
+                # Inverte Dreno e Fonte virtualmente
+                print('AVISO: trocando drain por source')
+                vd, vs = vs, vd
+            
+            # Cálculo dos potenciais efetivos
             if self.first_iter:
-                vgs = 2
+                vgs = 2.0
                 self.first_iter = False
             else:
                 vgs = vg - vs
-            # vgs = vg - vs
             vds = vd - vs
         elif self.tipo == 'P':
+            if vd > vs:
+                # No PMOS, se D > S, inverte (condução reversa)
+                print('AVISO: trocando drain por source')
+                vd, vs = vs, vd
+            
             if self.first_iter:
-                vgs = -2
+                vgs = -2.0
                 self.first_iter = False
             else:
-                vgs = -1 * (vg - vs)
-            # vgs = -1 * (vg - vs)
-            vds = -1 * (vd - vs)
-        else:
-            raise Exception('Tipo de MOSFET inválido!')
+                vgs = -(vg - vs)
+            vds = -(vd - vs)
 
-        id = 0.0
+        # Cálculo das Correntes e Condutâncias
+        # Nota: Corrigi os erros de digitação do pdf (vds^2 no triodo e falta de 1+ no lambda)
+        
+        Vt = self.Vth
+        Beta = self.beta/2   # Ajuste para modelo SPICE (KP/2)
+        Lambda = self.lbda
+        
+        id_calc = 0.0
         gm = 0.0
         gds = 0.0
 
-        # self.beta = self.K * (self.W / self.L)
-        if vds > (vgs - self.Vth) and vds > self.Vth:
-            # print('INFO: MOSFET em saturação')
-            gm = self.beta * ( 2 * ( vgs - self.Vth ) * ( 1 + self.lbda * vds ) )
-            id = self.beta * ( ( vgs - self.Vth ) ** 2 ) * ( self.lbda * vds )
-            gds = self.beta * ( ( vgs - self.Vth ) ** 2 ) * self.lbda
-        elif vds <= (vgs - self.Vth) and vds > self.Vth:
-            # print('INFO: MOSFET em triodo')
-            id = self.beta * ( 2 * ( vgs - self.Vth ) * vds ** 2 ) * ( 1 + self.lbda * vds )
-            gm = self.beta * ( 2 * vds * ( 1 + self.lbda * vds ) )
-            gds = self.beta * ( 2 * ( vds - self.Vth ) - 2 * vds + 4 * self.lbda * ( vgs - self.Vth ) - 3 * self.lbda * vds ** 2 )
+        # -- Corte --
+        if vgs <= Vt:
+            id_calc = 0.0
+            gm = 0.0
+            gds = 0.0
+        
         else:
-            # print('INFO: MOSFET em corte')
-            pass
+            Vov = vgs - Vt # Overdrive Voltage
+            termo_lambda = (1 + Lambda * vds)
+            
+            # -- Saturação --
+            if vds > Vov:
+                # Fórmula corrigida:
+                id_calc = Beta * (Vov ** 2) * termo_lambda
+                gm = 2 * Beta * Vov * termo_lambda
+                gds = Beta * (Vov ** 2) * Lambda
+            
+            # -- Triodo --
+            else:
+                # Fórmula corrigida: [2(Vgs-Vt)Vds - Vds^2]
+                parentesis_triodo = (2 * Vov * vds) - (vds ** 2)
+                
+                id_calc = Beta * parentesis_triodo * termo_lambda
+                gm = Beta * (2 * vds) * termo_lambda
+                gds = Beta * (2*Vov - 2*vds + 4*Lambda*Vov*vds - 3*Lambda*(vds**2))
+
+        # Ajuste de sinal específico para PMOS (devido à convenção de corrente saindo do Dreno)
+        if self.tipo == 'P':
+            id_calc = -id_calc
 
         self.transcondutancia.valor = gm
-        self.fonte.nivel_dc = id
-        if gds != 0.0:
+        self.fonte.nivel_dc = id_calc
+        if gds != 0:
             self.condutancia.valor = 1/gds
 
         Gn, I = self.transcondutancia.estampaBE(Gn, I, t, tensoes)
         Gn, I = self.fonte.estampaBE(Gn, I, t, tensoes)
-        if gds != 0.0:
+        if gds != 0:
             Gn, I = self.condutancia.estampaBE(Gn, I, t, tensoes)
 
         return Gn, I
