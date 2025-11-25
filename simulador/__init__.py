@@ -351,7 +351,10 @@ class Resultado():
         @returns Objeto de gráfico do Matplotlib
         '''
         import matplotlib.pyplot as plt
-        plot = plt.plot(self.t, self.tensoes(nos), label=nos)
+        if nos is None:
+            plot = plt.plot(self.t, self.tensoes(nos), label=self.__nos)
+        else:
+            plot = plt.plot(self.t, self.tensoes(nos), label=nos)
         plt.legend()
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
