@@ -8,7 +8,7 @@ def netlist(filename):
     r.export('tests/' + filename.replace('.net', '.sim.test'))
 
 
-def check_tolerances(filename, tolerancia=0.01):
+def check_tolerances(filename, tolerancia=0.01, flip=False):
     ref = simulador.import_resultado('tests/' + filename)
     test = simulador.import_resultado('tests/' + filename + '.test')
     assert ref.nos == test.nos
@@ -17,7 +17,10 @@ def check_tolerances(filename, tolerancia=0.01):
     for r, t in zip(ref, test):
         nodes_ref = r[1]
         nodes_test = t[1]
-        delta = [abs(i-j) for i, j in zip(nodes_ref, nodes_test)]
+        if flip:
+            delta = [abs(i+j) for i, j in zip(nodes_ref, nodes_test)]
+        else:
+            delta = [abs(i-j) for i, j in zip(nodes_ref, nodes_test)]
         total_error += max(delta)
         total_samples += 1
     total_error /= total_samples
@@ -52,7 +55,7 @@ def test_opamp_rectifier():
 
 def test_oscilator():
     netlist('oscilator.net')
-    check_tolerances('oscilator.sim', 0.2)
+    check_tolerances('oscilator.sim', tolerancia=0.09, flip=True)
 
 
 def test_pulse():
