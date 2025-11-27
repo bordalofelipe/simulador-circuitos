@@ -967,7 +967,7 @@ class Mosfet(Componente):
         # Nota: Corrigi os erros de digitação do pdf (vds^2 no triodo e falta de 1+ no lambda)
         
         Vt = self.Vth
-        Beta = self.beta/2   # Ajuste para modelo SPICE (KP/2)
+        Beta = self.beta   # Ajuste para modelo SPICE (KP/2)
         Lambda = self.lbda
         
         id_calc = 0.0
@@ -1005,7 +1005,7 @@ class Mosfet(Componente):
             id_calc = -id_calc
 
         self.transcondutancia.valor = gm
-        self.fonte.nivel_dc = id_calc
+        self.fonte.nivel_dc = id_calc - gm*vgs - gds*vds
         if gds != 0:
             self.condutancia.valor = 1/gds
 
