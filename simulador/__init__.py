@@ -116,14 +116,15 @@ class Circuito():
             print('INFO: Analise nao linear necessaria')
 
         # --- Parâmetros da Análise no Tempo ---
-        N_MAX = 50
+        N_MAX = 20
         M_MAX = 100
-        STEP_FACTOR = 1000
-        TOLERANCIA = 0.001
+        STEP_FACTOR = 1e9
+        TOLERANCIA = 0.00001
 
         resultado = Resultado(self.__nos[1:], [], [])  # pula o no terra
         # Simulação no tempo
         tempo = 0
+        np.random.seed(512)
         while tempo < self.tempo_total:
 
             if tempo == 0:
@@ -132,7 +133,7 @@ class Circuito():
             else:
                 passo = self.passo
 
-            previous = resultado[-1][1] if len(resultado) > 0 else [0.0 for i in range(len(self.__nos))]
+            previous = list(np.random.rand(num_vars))
             # Interno
             passo_interno_atual = 0
             while passo_interno_atual < max_internal_step:
@@ -412,7 +413,7 @@ class Resultado():
             f.write('\n')
             for t, r in zip(self.__t, self.__resultado):
                 f.write(str(t) + ' ')
-                f.write(' '.join(str(i) for i in r))
+                f.write(' '.join(str(round(i, 6)) for i in r))
                 f.write('\n')
         return self.__resultado
 
