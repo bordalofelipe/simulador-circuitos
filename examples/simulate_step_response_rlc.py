@@ -14,7 +14,6 @@ circuito.append(simulador.Capacitor('C1', ['3', simulador.GND], 1e-06))  # Cria 
 resultado = circuito.run()  # Roda a simulação do circuito
 resultado.export('rlc_step_response.sim')  # Exporta a simulação
 
-# Opcional: Para ver o gráfico automaticamente ao rodar
 import matplotlib.pyplot as plt
 resultado.plot_xt(['1', '3'])
 plt.show()
