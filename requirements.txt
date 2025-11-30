@@ -1,4 +1,1 @@
 numpy
-matplot.lib
-scipy
-pytest
