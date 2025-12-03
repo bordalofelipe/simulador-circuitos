@@ -936,13 +936,13 @@ class Mosfet(Componente):
 
         # Lógica de Inversão e Definição de Vgs/Vds (Baseado na Imagem 2)
         # Permite que o transistor conduza nos dois sentidos (Source vira Dreno)
-        
+
         if self.tipo == 'N':
             if vd < vs:
                 # Inverte Dreno e Fonte virtualmente
                 print('AVISO: trocando drain por source')
                 vd, vs = vs, vd
-            
+
             # Cálculo dos potenciais efetivos
             if self.first_iter:
                 vgs = 2.0
@@ -955,7 +955,7 @@ class Mosfet(Componente):
                 # No PMOS, se D > S, inverte (condução reversa)
                 print('AVISO: trocando drain por source')
                 vd, vs = vs, vd
-            
+
             if self.first_iter:
                 vgs = -2.0
                 self.first_iter = False
@@ -965,11 +965,11 @@ class Mosfet(Componente):
 
         # Cálculo das Correntes e Condutâncias
         # Nota: Corrigi os erros de digitação do pdf (vds^2 no triodo e falta de 1+ no lambda)
-        
+
         Vt = self.Vth
         Beta = self.beta   # Ajuste para modelo SPICE (KP/2)
         Lambda = self.lbda
-        
+
         id_calc = 0.0
         gm = 0.0
         gds = 0.0
@@ -979,23 +979,23 @@ class Mosfet(Componente):
             id_calc = 0.0
             gm = 0.0
             gds = 0.0
-        
+
         else:
-            Vov = vgs - Vt # Overdrive Voltage
+            Vov = vgs - Vt  # Overdrive Voltage
             termo_lambda = (1 + Lambda * vds)
-            
+
             # -- Saturação --
             if vds > Vov:
                 # Fórmula corrigida:
                 id_calc = Beta * (Vov ** 2) * termo_lambda
                 gm = 2 * Beta * Vov * termo_lambda
                 gds = Beta * (Vov ** 2) * Lambda
-            
+
             # -- Triodo --
             else:
                 # Fórmula corrigida: [2(Vgs-Vt)Vds - Vds^2]
                 parentesis_triodo = (2 * Vov * vds) - (vds ** 2)
-                
+
                 id_calc = Beta * parentesis_triodo * termo_lambda
                 gm = Beta * (2 * vds) * termo_lambda
                 gds = Beta * (2*Vov - 2*vds + 4*Lambda*Vov*vds - 3*Lambda*(vds**2))

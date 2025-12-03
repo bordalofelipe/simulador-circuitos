@@ -20,20 +20,20 @@ circuito.append(simulador.Indutor('3000', ['1', simulador.GND], 1.0))
 # Q = C*V = 0.31 * 1 = 0.31 Coulombs.
 # Usando um pulso de 0.1s (1 passo), a corrente deve ser 3.1A.
 circuito.append(simulador.Capacitor('2000', ['2', simulador.GND], 0.31))
-circuito.append(simulador.FonteCorrente('IC_C2', ['2', simulador.GND], 
+circuito.append(simulador.FonteCorrente('IC_C2', ['2', simulador.GND],
     ['PULSE', '0', '3.1', '0', '1e-9', '1e-9', '0.1', '1001', '1']))
 
 # C2001 1 0 1 IC=1
 # Q = C*V = 1.0 * 1 = 1.0 Coulombs.
 # Usando um pulso de 0.1s, a corrente deve ser 10A.
 circuito.append(simulador.Capacitor('2001', ['1', simulador.GND], 1.0))
-circuito.append(simulador.FonteCorrente('IC_C1', ['1', simulador.GND], 
+circuito.append(simulador.FonteCorrente('IC_C1', ['1', simulador.GND],
     ['PULSE', '0', '10.0', '0', '1e-9', '1e-9', '0.1', '1001', '1']))
 
 # N9900 2 0 -2 1.1 -1 0.7 1 -0.7 2 -1.1
 # Resistor Não Linear (Piecewise Linear)
 # Parâmetros passados como floats diretos
-circuito.append(simulador.ResistorNaoLinear('9900', ['2', simulador.GND], 
+circuito.append(simulador.ResistorNaoLinear('9900', ['2', simulador.GND],
     -2.0,  1.1,  # V1, I1
     -1.0,  0.7,  # V2, I2
      1.0, -0.7,  # V3, I3

@@ -316,7 +316,7 @@ class Resultado():
         '''
         return self.__t
 
-    def tensoes(self, nos: str|list[str]|None = None):
+    def tensoes(self, nos: str | list[str] | None = None):
         '''!
         @brief Obtem vetor de tensões nodais de todos ou alguns nós.
         @param nos Nó ou lista de nós para obter as tensões nodais. Por padrão, retorna as tensões de todos os nós
@@ -345,7 +345,7 @@ class Resultado():
                 filtrado.append(node_filtrado)
             return filtrado
 
-    def plot_xt(self, nos: str|list[str]|None = None, xlabel='Tempo (s)', ylabel='Tensão (V)'):
+    def plot_xt(self, nos: str | list[str] | None = None, xlabel='Tempo (s)', ylabel='Tensão (V)'):
         '''!
         @brief Fazer gráfico das tensões nodais no tempo
         @param nos Nó ou lista de nós para colocar no gráfico. Por padrão, plota as tensões de todos os nós

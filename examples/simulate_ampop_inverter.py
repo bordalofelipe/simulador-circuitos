@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 circuito = simulador.Circuito('.TRAN', 0.01, 1e-05, 'BE', 1)
 
 # Senoide: 1V amplitude, 100Hz
-circuito.append(simulador.FonteTensao('Vin', ['in', simulador.GND], 
+circuito.append(simulador.FonteTensao('Vin', ['in', simulador.GND],
     ['SIN', '0', '1', '100', '0', '0', '0', '5']))
 
 # Resistores

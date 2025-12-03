@@ -35,13 +35,13 @@ print("Plotando tensões dos nós disponíveis...")
 
 # --- Lógica de Seleção de Nós ---
 filename = os.path.basename(netlist_path)
-    
+
 if 'pulse' in filename:
-    # Teste 1: sinal pulsado 
+    # Teste 1: sinal pulsado
     nos_para_plotar = ['1']
 
 elif 'sinusoidal' in filename:
-    # Teste 2: sinal senoidal 
+    # Teste 2: sinal senoidal
     nos_para_plotar = ['1']
 
 elif 'chua' in filename:
@@ -57,24 +57,23 @@ elif 'dc_source' in filename:
     nos_para_plotar = ['1', '2']
 
 elif 'opamp_rectifier' in filename:
-    # Teste 6: retificador onda completa 
+    # Teste 6: retificador onda completa
     nos_para_plotar = ['1', '4']
-    
+
 elif 'oscilator' in filename:
     # Teste 7: oscilador
-    nos_para_plotar = ['1','2']
+    nos_para_plotar = ['1', '2']
 
 else:
     # A função plot_xt identifica todos os nós disponíveis e os plota.
     nos_para_plotar = None
 
 
-
 print(f"Arquivo: {filename} -> Plotando nós: {nos_para_plotar}")
-    
+
 # Plota os nós selecionados
 resultado.plot_xt(nos_para_plotar)
-    
+
 
 print(f"Plotando apenas os nós de tensão: {nos_para_plotar}")
 resultado.plot_xt(nos_para_plotar)
