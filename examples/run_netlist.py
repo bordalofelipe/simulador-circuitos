@@ -5,9 +5,8 @@ import os
 # Exemplo de uso do simulador
 # Leitura e simulacao a partir de arquivo Netlist
 
-# Definir a netlist aqui
 # Define o caminho do arquivo .net (está na pasta 'tests' um nível acima)
-netlist_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'opamp_rectifier.net')
+netlist_path = os.path.join('tests', 'opamp_rectifier.net')
 
 
 # Verifica se o arquivo existe antes de tentar ler
@@ -66,18 +65,14 @@ elif 'oscilator' in filename:
     nos_para_plotar = ['1','2']
 
 else:
-    # Padrão (Fallback): Pega todos os nós de tensão encontrados
-    # Filtra: 't' (tempo), '0' (terra) e correntes auxiliares (começam com 'J')
-    nos_para_plotar = [
-        k for k in resultado 
-        if k != 't' and k != '0' and not str(k).upper().startswith('J')
-    ]
+    # A função plot_xt identifica todos os nós disponíveis e os plota.
+    nos_para_plotar = None
 
 
 
 print(f"Arquivo: {filename} -> Plotando nós: {nos_para_plotar}")
-
-    # Plota os nós selecionados no tempo
+    
+# Plota os nós selecionados
 resultado.plot_xt(nos_para_plotar)
     
 
