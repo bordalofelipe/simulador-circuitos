@@ -451,6 +451,8 @@ if __name__ == '__main__':
     import sys
     if len(sys.argv) != 3:
         print('Uso:', sys.argv[0], '<arquivo-netlist> <arquivo-saida>')
+        print('Executa a simulação para a netlist armazenada em <arquivo-netlist> e salva os resultados em <arquivo-saida>')
+        sys.exit()
     c = import_netlist(sys.argv[1])
     resultado = c.run()
     resultado.export(sys.argv[2])
