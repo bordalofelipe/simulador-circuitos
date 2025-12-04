@@ -38,20 +38,47 @@ class Circuito():
         self.__componentes: list[Componente] = []
         self.__nos = []
 
-    def __setitem__(self, index, componente):
+    def __setitem__(self, index, componente): 
+        '''!
+        @brief Define um componente no circuito
+        @param index Índice do componente na lista de componentes
+        @param componente Componente a ser definido
+        @details Define um componente na lista de componentes do circuito.
+        '''
         if (isinstance(componente, Componente)):
             self.__componentes[index] = componente
 
     def __getitem__(self, index):
+        '''!
+        @brief Obtém um componente do circuito
+        @param index Índice do componente na lista de componentes
+        @return Componente na posição index
+        @details Retorna um componente da lista de componentes do circuito.
+        '''
         return self.__componentes[index]
 
     def __delitem__(self, index):
+        '''!
+        @brief Remove um componente do circuito
+        @param index Índice do componente na lista de componentes
+        @details Remove um componente da lista de componentes do circuito e retorna o componente removido.
+        '''
         return self.__componentes.pop(index)
 
     def __len__(self):
+        '''!
+        @brief Retorna o número de componentes no circuito
+        @return Número de componentes no circuito
+        @details Utilizado para obter o número de componentes na lista de componentes do circuito.
+        '''
         return len(self.__componentes)
 
     def __iter__(self):
+        '''!
+        @brief Retorna um iterador sobre os componentes do circuito
+        @return Iterador sobre os componentes do circuito
+        @details Utilizado para iterar sobre os componentes da lista de componentes do circuito.
+        '''
         return iter(self.__componentes)
 
     def append(self, componente):
@@ -63,10 +90,20 @@ class Circuito():
         if (isinstance(componente, Componente)):
             self.__componentes.append(componente)
 
-    def remove(self, componente):
+    def remove(self, componente): 
+        '''!
+        @brief Remove um componente do circuito através de seu valor
+        @param componente Variável que representa o componente a ser removido do circuito
+        @details Utilizado para remover um componente da lista de componentes do circuito, eliminando a primeira ocorrência do componente na lista.
+        '''
         return self.__componentes.remove(componente)
 
     def pop(self, index):
+        '''!
+        @brief Remove um componente do circuito através de seu índice
+        @param index Índice do componente na lista de componentes
+        @details Utilizado para remover um componente da lista de componentes do circuito e retorna o componente removido.
+        '''
         return self.__delitem__(index)
 
     def __popular_nos(self):
@@ -116,9 +153,13 @@ class Circuito():
             print('INFO: Analise nao linear necessaria')
 
         # --- Parâmetros da Análise no Tempo ---
+        ## Número máximo de iterações de Newton-Raphson
         N_MAX = 20
+        ## Número máximo de tentativas aleatórias antes de considerar o circuito impossível de ser solucionado  
         M_MAX = 100
+        ## Fator de divisão do passo de integração
         STEP_FACTOR = 1e9
+        ## Tolerância para convergência
         TOLERANCIA = 0.00001
 
         resultado = Resultado(self.__nos[1:], [], [])  # pula o no terra

@@ -135,6 +135,12 @@ class Componente():
             self.ciclos = float(args[8])
 
     def calcular_valor_fonte(self, t):
+        '''!
+        @brief Define o valor da fonte de tensão ou corrente no instante t
+        @param t Variável que representa o instante de tempo atual
+        @return Valor da fonte de tensão ou corrente no instante t
+        @details Este valor é utilizado para calcular a contribuição da fonte na matriz de condutância e corrente.
+        '''
         if self.tipo == 'DC':
             valor = self.nivel_dc
         elif self.tipo == 'SIN':
@@ -312,6 +318,11 @@ class Indutor(Componente):
         self.previous = ic
 
     def update(self, tensoes):
+        '''!
+        @brief Atualiza o valor da corrente no indutor
+        @param tensoes Lista de tensões nodais no tempo atual
+        @details Utilizado para atualizar o valor da corrente no indutor baseado nas tensões nodais fora do método de iteração de Newton-Raphson.
+        '''
         no_corrente = self._nos_mod[0]
         self.previous = tensoes[no_corrente]
 
@@ -393,6 +404,11 @@ class Capacitor(Componente):
             return 'C' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor) + ' IC=' + str(self.ic)
 
     def update(self, tensoes):
+        '''!
+        @brief Atualiza o valor da tensão no capacitor
+        @param tensoes Lista de tensões nodais no tempo atual
+        @details Utilizado para atualizar o valor da tensão no capacitor baseado nas tensões nodais fora do método de iteração de Newton-Raphson.
+        '''
         no_a = self._posicao_nos[0]
         no_b = self._posicao_nos[1]
         self.previous = (tensoes[no_a] - tensoes[no_b])
@@ -468,6 +484,11 @@ class ResistorNaoLinear(Componente):
         self.fonte = FonteCorrente(name + 'I', nos, ['DC', '0'])
 
     def set_posicao_nos(self, posicoes: list[int]):
+        '''!
+        @brief Define as posições dos nós do resistor não linear nas matrizes do sistema
+        @param posicoes Lista das posições dos nós nas matrizes do sistema
+        @details Utilizado para calcular corretamente as contribuições do resistor não linear para as matrizes.
+        '''
         self.condutancia.set_posicao_nos(posicoes)
         self.fonte.set_posicao_nos(posicoes)
         super().set_posicao_nos(posicoes)
@@ -738,7 +759,7 @@ class FonteTensaoCorrente(Componente):
         return Gn, I
 
 
-class Diodo(Componente):
+class Diodo(Componente): 
     '''!
     @brief Representa um diodo no circuito
     @details O diodo é um componente não linear que obedece a relação:
@@ -762,6 +783,11 @@ class Diodo(Componente):
         self.fonte = FonteCorrente(name + 'I', nos, ['DC', '0'])
 
     def set_posicao_nos(self, posicoes: list[int]):
+        '''!
+        @brief Define as posições dos nós do diodo nas matrizes do sistema
+        @param posicoes Lista das posições dos nós nas matrizes do sistema
+        @details Utilizado para calcular corretamente as contribuições do diodo para as matrizes.
+        '''
         self.condutancia.set_posicao_nos(posicoes)
         self.fonte.set_posicao_nos(posicoes)
         super().set_posicao_nos(posicoes)
@@ -906,6 +932,11 @@ class Mosfet(Componente):
         self.condutancia = Resistor(name, [nos[0], nos[2]], 1000)
 
     def set_posicao_nos(self, posicoes: list[int]):
+        '''!
+        @brief Define as posições dos nós do MOSFET nas matrizes do sistema
+        @param posicoes Lista das posições dos nós nas matrizes do sistema
+        @details Utilizado para calcular corretamente as contribuições do MOSFET para as matrizes.
+        '''
         self.first_iter = True
         self.transcondutancia.set_posicao_nos([posicoes[0], posicoes[2], posicoes[1], posicoes[2]])
         self.fonte.set_posicao_nos([posicoes[0], posicoes[2]])
