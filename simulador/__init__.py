@@ -1,34 +1,27 @@
 import numpy as np
 from simulador.componentes import *
 
-'''!
-@var GND
-    No terra
-'''
+## @var GND No terra
 GND = '0'
 
 
-class Circuito():
-    '''!
-    @brief Representa um circuito elétrico completo com seus componentes e parâmetros de simulação
-    @details Esta classe gerencia um circuito elétrico, seus componentes e executa simulações transientes
-    usando análise nodal modificada. Suporta componentes lineares e não lineares, utilizando
-    métodos de integração numérica (Backward Euler, Forward Euler, Trapezoidal) e iteração
-    de Newton-Raphson para componentes não lineares.
+## @brief Representa um circuito elétrico completo com seus componentes e parâmetros de simulação
+# @details Esta classe gerencia um circuito elétrico, seus componentes e executa simulações transientes
+# usando análise nodal modificada. Suporta componentes lineares e não lineares, utilizando
+# métodos de integração numérica (Backward Euler, Forward Euler, Trapezoidal) e iteração
+# de Newton-Raphson para componentes não lineares.
 
-    @author Equipe do Simulador de Circuitos
-    @date 2025
-    '''
+# @author Equipe do Simulador de Circuitos
+# @date 2025
+class Circuito():
+    ## @brief Construtor da classe Circuito
+    # @param simulacao Tipo de simulação (ex: '.TRAN' para transiente, '.DC' para análise de corrente contínua)
+    # @param tempo_total Tempo total de simulação em segundos
+    # @param passo Tamanho do passo de integração em segundos. O passo de integração é o intervalo de tempo entre dois instantes de tempo consecutivos.
+    # @param tipo_simulacao Tipo de método de integração: 'BE' (Backward Euler), 'FE' (Forward Euler) ou 'TRAP' (Trapezoidal). O método de integração é o algoritmo usado para calcular as tensões nodais ao longo do tempo.
+    # @param passo_interno Número de passos internos por passo principal. O passo interno é o intervalo de tempo entre dois instantes de tempo consecutivos dentro de um passo principal.
+    # @details Inicializa um circuito vazio com os parâmetros de simulação especificados.
     def __init__(self, simulacao: str, tempo_total: float, passo: float, tipo_simulacao: str, passo_interno: int):
-        '''!
-        @brief Construtor da classe Circuito
-        @param simulacao Tipo de simulação (ex: '.TRAN' para transiente, '.DC' para análise de corrente contínua)
-        @param tempo_total Tempo total de simulação em segundos
-        @param passo Tamanho do passo de integração em segundos. O passo de integração é o intervalo de tempo entre dois instantes de tempo consecutivos.
-        @param tipo_simulacao Tipo de método de integração: 'BE' (Backward Euler), 'FE' (Forward Euler) ou 'TRAP' (Trapezoidal). O método de integração é o algoritmo usado para calcular as tensões nodais ao longo do tempo.
-        @param passo_interno Número de passos internos por passo principal. O passo interno é o intervalo de tempo entre dois instantes de tempo consecutivos dentro de um passo principal.
-        @details Inicializa um circuito vazio com os parâmetros de simulação especificados.
-        '''
         self.simulacao = simulacao
         self.tempo_total = tempo_total
         self.tipo_simulacao = tipo_simulacao
@@ -38,80 +31,62 @@ class Circuito():
         self.__componentes: list[Componente] = []
         self.__nos = []
 
+    ## @brief Define um componente no circuito
+    # @param index Índice do componente na lista de componentes
+    # @param componente Componente a ser definido
+    # @details Define um componente na lista de componentes do circuito.
     def __setitem__(self, index, componente): 
-        '''!
-        @brief Define um componente no circuito
-        @param index Índice do componente na lista de componentes
-        @param componente Componente a ser definido
-        @details Define um componente na lista de componentes do circuito.
-        '''
         if (isinstance(componente, Componente)):
             self.__componentes[index] = componente
-
+            
+    ## @brief Obtém um componente do circuito
+    # @param index Índice do componente na lista de componentes
+    # @return Componente na posição index
+    # @details Retorna um componente da lista de componentes do circuito.
     def __getitem__(self, index):
-        '''!
-        @brief Obtém um componente do circuito
-        @param index Índice do componente na lista de componentes
-        @return Componente na posição index
-        @details Retorna um componente da lista de componentes do circuito.
-        '''
         return self.__componentes[index]
 
+    ## @brief Remove um componente do circuito
+    # @param index Índice do componente na lista de componentes
+    # @details Remove um componente da lista de componentes do circuito e retorna o componente removido.
     def __delitem__(self, index):
-        '''!
-        @brief Remove um componente do circuito
-        @param index Índice do componente na lista de componentes
-        @details Remove um componente da lista de componentes do circuito e retorna o componente removido.
-        '''
         return self.__componentes.pop(index)
 
+    ## @brief Retorna o número de componentes no circuito
+    # @return Número de componentes no circuito
+    # @details Utilizado para obter o número de componentes na lista de componentes do circuito.
     def __len__(self):
-        '''!
-        @brief Retorna o número de componentes no circuito
-        @return Número de componentes no circuito
-        @details Utilizado para obter o número de componentes na lista de componentes do circuito.
-        '''
         return len(self.__componentes)
 
+    ## @brief Retorna um iterador sobre os componentes do circuito
+    # @return Iterador sobre os componentes do circuito
+    # @details Utilizado para iterar sobre os componentes da lista de componentes do circuito.
     def __iter__(self):
-        '''!
-        @brief Retorna um iterador sobre os componentes do circuito
-        @return Iterador sobre os componentes do circuito
-        @details Utilizado para iterar sobre os componentes da lista de componentes do circuito.
-        '''
         return iter(self.__componentes)
 
+    ## @brief Adiciona um componente ao circuito
+    # @param componente Componente a ser adicionado ao circuito
+    # @details Adiciona um componente à lista de componentes do circuito.
     def append(self, componente):
-        '''!
-        @brief Adiciona um componente ao circuito
-        @param componente Componente a ser adicionado ao circuito
-        @details Adiciona um componente à lista de componentes do circuito.
-        '''
         if (isinstance(componente, Componente)):
             self.__componentes.append(componente)
 
+    ## @brief Remove um componente do circuito através de seu valor
+    # @param componente Variável que representa o componente a ser removido do circuito
+    # @details Utilizado para remover um componente da lista de componentes do circuito, eliminando a primeira ocorrência do componente na lista.
     def remove(self, componente): 
-        '''!
-        @brief Remove um componente do circuito através de seu valor
-        @param componente Variável que representa o componente a ser removido do circuito
-        @details Utilizado para remover um componente da lista de componentes do circuito, eliminando a primeira ocorrência do componente na lista.
-        '''
         return self.__componentes.remove(componente)
 
+    ## @brief Remove um componente do circuito através de seu índice
+    # @param index Índice do componente na lista de componentes
+    # @details Remove um componente da lista de componentes do circuito e retorna o componente removido.
     def pop(self, index):
-        '''!
-        @brief Remove um componente do circuito através de seu índice
-        @param index Índice do componente na lista de componentes
-        @details Utilizado para remover um componente da lista de componentes do circuito e retorna o componente removido.
-        '''
         return self.__delitem__(index)
 
+    ## @brief Popula a lista de nós do circuito a partir dos componentes
+    # @exception Exception Se o circuito não tiver nó terra
+    # @details Identifica todos os nós únicos dos componentes e garante que o nó terra (GND) seja o primeiro.
     def __popular_nos(self):
-        '''!
-        @brief Popula a lista de nós do circuito a partir dos componentes
-        @exception Exception Se o circuito não tiver nó terra
-        @details Identifica todos os nós únicos dos componentes e garante que o nó terra (GND) seja o primeiro.
-        '''
         self.__nos = [GND]  # garante que o no terra eh o primeiro
         hasGround = False
         for comp in self.__componentes:
@@ -124,14 +99,12 @@ class Circuito():
         if not hasGround:
             raise Exception('Circuito sem no terra')
 
+    ## @brief Executa a simulação transiente do circuito
+    # @return Objeto Resultado contendo as tensões nodais ao longo do tempo
+    # @exception Exception Se a simulação falhar após M_MAX tentativas aleatórias
+    # @details Executa a simulação transiente usando análise nodal modificada. Para circuitos não lineares,
+    # utiliza iteração de Newton-Raphson. Suporta múltiplos métodos de integração numérica.
     def run(self):
-        '''!
-        @brief Executa a simulação transiente do circuito
-        @return Objeto Resultado contendo as tensões nodais ao longo do tempo
-        @exception Exception Se a simulação falhar após M_MAX tentativas aleatórias
-        @details Executa a simulação transiente usando análise nodal modificada. Para circuitos não lineares,
-        utiliza iteração de Newton-Raphson. Suporta múltiplos métodos de integração numérica.
-        '''
         self.__popular_nos()
         print('INFO: Circuito com ' + str(self.__nos) + ' nos')
         nao_linear = False
@@ -243,13 +216,11 @@ class Circuito():
         print("INFO: Simulação concluída.")
         return resultado
 
+    ## @brief Exporta o circuito para um arquivo netlist
+    # @param filename Nome do arquivo onde salvar a netlist
+    # @details Salva o circuito no formato netlist compatível com SPICE, incluindo todos os componentes
+    # e parâmetros de simulação.
     def export(self, filename: str):
-        '''!
-        @brief Exporta o circuito para um arquivo netlist
-        @param filename Nome do arquivo onde salvar a netlist
-        @details Salva o circuito no formato netlist compatível com SPICE, incluindo todos os componentes
-        e parâmetros de simulação.
-        '''
         with open(filename, 'w') as f:
             self.__popular_nos()
             f.write(str(len(self.__nos)-1) + '\n')  # por causa do no terra, tirar 1
@@ -257,16 +228,11 @@ class Circuito():
                 f.write(str(com) + '\n')
             f.write(self.simulacao + ' ' + str(self.tempo_total) + ' ' + str(self.passo) + ' ' + self.tipo_simulacao + ' ' + str(self.passo_interno))
 
-
+## @brief Importa um circuito a partir de um arquivo netlist
+# @param filename Nome do arquivo netlist a ser importado
+# @return Objeto Circuito com os componentes e parâmetros de simulação carregados do arquivo
+# @details Lê um arquivo netlist no formato SPICE e cria um objeto Circuito com todos os componentes e parâmetros de simulação especificados no arquivo. Suporta todos os tipos de componentes definidos no simulador.
 def import_netlist(filename: str):
-    '''!
-    @brief Importa um circuito a partir de um arquivo netlist
-    @param filename Nome do arquivo netlist a ser importado
-    @return Objeto Circuito com os componentes e parâmetros de simulação carregados do arquivo
-    @details Lê um arquivo netlist no formato SPICE e cria um objeto Circuito com todos os componentes
-    e parâmetros de simulação especificados no arquivo. Suporta todos os tipos de componentes
-    definidos no simulador.
-    '''
     with open(filename) as f:
         line = f.readline()  # nao usamos primeira linha
         componentes = []
@@ -321,55 +287,44 @@ def import_netlist(filename: str):
     return Circuito()
 
 
+## @brief Representa os resultados de uma simulação de circuito
+# @details Esta classe armazena e gerencia os resultados de uma simulação transiente, incluindo
+# as tensões nodais em cada instante de tempo. Fornece métodos para acessar, visualizar e exportar
+# os dados da simulação.
+# @author Equipe do Simulador de Circuitos
+# @date 2025
 class Resultado():
-    '''!
-    @brief Representa os resultados de uma simulação de circuito
-    @details Esta classe armazena e gerencia os resultados de uma simulação transiente, incluindo
-    as tensões nodais em cada instante de tempo. Fornece métodos para acessar, visualizar e exportar
-    os dados da simulação.
-
-    @author Equipe do Simulador de Circuitos
-    @date 2025
-    '''
+    ## @brief Construtor da classe Resultado
+    # @param nos Lista de nós do circuito
+    # @param t Lista de instantes de tempo
+    # @param resultado Lista de listas contendo as tensões nodais em cada instante de tempo
+    # @details Inicializa um objeto Resultado vazio ou com dados pré-existentes.
     def __init__(self, nos: list[str], t: list[float], resultado: list[list[float]]):
-        '''!
-        @brief Construtor da classe Resultado
-        @param nos Lista de nós do circuito
-        @param t Lista de instantes de tempo
-        @param resultado Lista de listas contendo as tensões nodais em cada instante de tempo
-        @details Inicializa um objeto Resultado vazio ou com dados pré-existentes.
-        '''
         self.__nos = nos
         self.__t = t
         self.__resultado = resultado
 
+    ## @brief Retorna a lista de nós
     @property
     def nos(self):
-        '''!
-        @brief Retorna a lista de nós
-        '''
         return self.__nos
 
+    ## @brief Retorna a lista de instantes de tempo
     @property
     def t(self):
-        '''!
-        @brief Retorna a lista de instantes de tempo
-        '''
         return self.__t
 
+    ## @brief Obtem vetor de tensões nodais de todos ou alguns nós.
+    # @param nos Nó ou lista de nós para obter as tensões nodais. Por padrão, retorna as tensões de todos os nós
+    # @return Lista das tensões nodais
+    # @details O formato da saída é:
+    # [
+    #     [tensao_no_1, tensao_no_2, tensao_no_3, ...], # instante t0
+    #     [tensao_no_1, tensao_no_2, tensao_no_3, ...], # instante t1
+    #     [tensao_no_1, tensao_no_2, tensao_no_3, ...], # instante t2
+    #     ...
+    # ]
     def tensoes(self, nos: str | list[str] | None = None):
-        '''!
-        @brief Obtem vetor de tensões nodais de todos ou alguns nós.
-        @param nos Nó ou lista de nós para obter as tensões nodais. Por padrão, retorna as tensões de todos os nós
-        @return Lista das tensões nodais
-        @details O formato da saída é:
-        [
-            [tensao_no_1, tensao_no_2, tensao_no_3, ...], # instante t0
-            [tensao_no_1, tensao_no_2, tensao_no_3, ...], # instante t1
-            [tensao_no_1, tensao_no_2, tensao_no_3, ...], # instante t2
-            ...
-        ]
-        '''
         if nos is None:
             return self.__resultado
         else:
@@ -386,12 +341,11 @@ class Resultado():
                 filtrado.append(node_filtrado)
             return filtrado
 
+
+    ## @brief Fazer gráfico das tensões nodais no tempo
+    # @param nos Nó ou lista de nós para colocar no gráfico. Por padrão, plota as tensões de todos os nós
+    # @returns Objeto de gráfico do Matplotlib
     def plot_xt(self, nos: str | list[str] | None = None, xlabel='Tempo (s)', ylabel='Tensão (V)'):
-        '''!
-        @brief Fazer gráfico das tensões nodais no tempo
-        @param nos Nó ou lista de nós para colocar no gráfico. Por padrão, plota as tensões de todos os nós
-        @returns Objeto de gráfico do Matplotlib
-        '''
         import matplotlib.pyplot as plt
         if nos is None:
             plot = plt.plot(self.t, self.tensoes(nos), label=self.__nos)
@@ -402,19 +356,21 @@ class Resultado():
         plt.ylabel(ylabel)
         return plot
 
+    ## @brief Fazer gráfico X-Y das tensões nodais
+    # @param no_x Nó do eixo X
+    # @param no_y Nó do eixo Y
+    # @returns Objeto de gráfico do Matplotlib
     def plot_xy(self, no_x: str, no_y: str):
-        '''!
-        @brief Fazer gráfico X-Y das tensões nodais
-        @param no_x Nó do eixo X
-        @param no_y Nó do eixo Y
-        @returns Objeto de gráfico do Matplotlib
-        '''
         import matplotlib.pyplot as plt
         plot = plt.plot(self.tensoes(no_x), self.tensoes(no_y))
         plt.xlabel(no_x)
         plt.ylabel(no_y)
         return plot
 
+    ## @brief Define tensões nodais de um instante de tempo
+    # @param index Índice do instante de tempo
+    # @param componente Lista de tensões nodais do instante de tempo a serem definidas
+    # @details As tensões nodais seguem a ordem de self.nos.
     def __setitem__(self, index, tuple):
         assert len(tuple) == 2
         t = tuple[0]
@@ -423,30 +379,54 @@ class Resultado():
         self.__t[index] = t
         self.__resultado[index] = resultado
 
+    ## @brief Obtém tensões nodais de um instante de tempo
+    # @param index Índice do instante de tempo
+    # @return Tupla com instante de tempo e tensões nodais no formato (t, [tensao1, tensao2, ...]).
+    # @details As tensões nodais seguem a ordem de self.nos.
     def __getitem__(self, index):
         return self.__t[index], self.__resultado[index]
 
+    ## @brief Remove um instante de tempo
+    # @param index Índice do instante de tempo
+    # @details Remove um instante de tempo e retorna uma tupla com instante de tempo e tensões nodais removidos no formato (t, [tensao1, tensao2, ...]).
     def __delitem__(self, index):
         return self.__t.pop(index), self.__resultado.pop(index)
 
+    ## @brief Retorna o número de instantes de tempo
+    # @return Número de instantes de tempo
     def __len__(self):
         return len(self.__resultado)
 
+    ## @brief Retorna um iterador sobre os instantes de tempo e tensões nodais
+    # @return Iterador sobre os instantes de tempo e tensões nodais
+    # @details Utilizado para iterar sobre os instantes de tempo e suas tensões nodais no formato `for t, tensoes in resultado`.
     def __iter__(self):
         return iter(zip(self.__t, self.__resultado))
 
+    ## @brief Adiciona um instante de tempo e suas tensões nodais
+    # @param t Instante de tempo
+    # @param resultado Tensões nodais no instante
     def append(self, t: float, resultado: list[float]):
         assert len(resultado) == len(self.__nos)
         self.__t.append(t)
         self.__resultado.append(resultado)
-
+    
+    ## @brief Remove um instante de tempo
+    # @param t Variável que representa o instante de tempo a ser removido do circuito
+    # @details Utilizado para remover um instante de tempo, eliminando a primeira ocorrência e suas respectivas tensões nodais.
     def remove(self, t):
         index = self.__t.index(t)
         return self.__delitem__(index)
 
+    ## @brief Remove um instante de tempo através de seu índice
+    # @param index Índice do instante de tempo
+    # @details Remove um instante de tempo e retorna uma tupla com instante de tempo e tensões nodais removidos no formato (t, [tensao1, tensao2, ...]).
     def pop(self, index):
         return self.__delitem__(index)
 
+    ## @brief Exporta o resultado para um arquivo de simulação
+    # @param filename Nome do arquivo onde salvar a simulação
+    # @details Salva o resultado em formato compatível com SPICE, incluindo todos os instantes de tempo, tensões nodais e variáveis modificadas.
     def export(self, filename: str):
         with open(filename, 'w') as f:
             f.write('t ')
@@ -465,14 +445,12 @@ class Resultado():
         return False
 
 
+## @brief Importa resultados de simulação a partir de um arquivo
+# @param filename Nome do arquivo contendo os resultados da simulação
+# @return Objeto Resultado com os dados carregados do arquivo
+# @details Lê um arquivo de resultados no formato gerado pelo método export da classe Resultado,
+# contendo as tensões nodais em cada instante de tempo da simulação.
 def import_resultado(filename: str):
-    '''!
-    @brief Importa resultados de simulação a partir de um arquivo
-    @param filename Nome do arquivo contendo os resultados da simulação
-    @return Objeto Resultado com os dados carregados do arquivo
-    @details Lê um arquivo de resultados no formato gerado pelo método export da classe Resultado,
-    contendo as tensões nodais em cada instante de tempo da simulação.
-    '''
     with open(filename) as f:
         line = f.readline()
         nos = line.replace('\n', '').split(' ')[1:]
