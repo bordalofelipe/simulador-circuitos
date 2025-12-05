@@ -207,7 +207,7 @@ class Componente():
 
 ## @brief Representa um resistor linear no circuito
 # @details O resistor é um componente linear que obedece à lei de Ohm: V = R*I.
-# @image html resistor.png "Resistor"
+# @image html resistor.png "Estampa Resistor"
 class Resistor(Componente):
     _linear = True
     _num_nos = 2
@@ -255,7 +255,7 @@ class Resistor(Componente):
 
 ## @brief Representa um indutor no circuito
 # @details O indutor é um componente linear que armazena energia no campo magnético. Sua corrente e tensão estão relacionadas por: V = L * dI/dt.
-# @image html inductor_stamp.png "Estampa do Indutor
+# @image html indutor.png "Estampa do Indutor
 class Indutor(Componente):
     _linear = True
     _num_nos = 2
@@ -272,6 +272,12 @@ class Indutor(Componente):
         self.valor = valor
         self.ic = ic
         self.previous = ic
+    ## @var valor
+    # Indutância em henrys
+    ## @var ic
+    # Condição inicial
+    ## @var previous
+    # Valor da corrente no instante anterior
 
     ## @brief Atualiza o valor da corrente no indutor
     # @param tensoes Lista de tensões nodais no tempo atual
@@ -317,7 +323,7 @@ class Indutor(Componente):
 
 ## @brief Representa um capacitor no circuito
 # @details O capacitor é um componente linear que armazena energia no campo elétrico. Sua corrente e tensão estão relacionadas por: I = C * dV/dt.
-# @image html capacitor_stamp.png "Estampa do Capacitor"
+# @image html capacitor.png "Estampa do Capacitor"
 class Capacitor(Componente):
     _linear = True
     _num_nos = 2
@@ -334,8 +340,12 @@ class Capacitor(Componente):
         self.valor = valor
         self.ic = ic
         self.previous = ic
-
-
+    ## @var valor
+    # Capacitância em farads
+    ## @var ic
+    # Condição inicial
+    ## @var previous
+    # Valor da tensões no instante anterior
 
     ## @brief Retorna representação do capacitor como linha da netlist
     # @return String no formato "C<nome> <nó_a> <nó_b> <valor> [IC=<corrente_inicial>]"
@@ -386,7 +396,7 @@ class Capacitor(Componente):
 
 ## @brief Representa um resistor não linear com característica de 3 segmentos no circuito
 # @details O resistor não linear é modelado por uma curva tensão-corrente definida por 4 pontos (V1,I1), (V2,I2), (V3,I3), (V4,I4), formando 3 segmentos lineares. A condutância é calculada dinamicamente baseada na tensão atual.
-# @image html nonlinear_resistor.png "Característica do Resistor Não Linear"
+# @image html resistor_nao_linear.png "Característica do Resistor Não Linear"
 class ResistorNaoLinear(Componente):
     _linear = False
     _num_nos = 2
@@ -416,7 +426,23 @@ class ResistorNaoLinear(Componente):
         self.i4 = i4
         self.condutancia = Resistor(name + 'R', nos, 0)
         self.fonte = FonteCorrente(name + 'I', nos, ['DC', '0'])
-
+    ## @var v1
+    # Tensão do primeiro ponto em volts
+    ## @var i1
+    # Corrente do primeiro ponto em aperes
+    ## @var v2
+    # Tensão do segundo ponto em volts
+    ## @var i2
+    # Corrente do segundo ponto em aperes
+    ## @var v3
+    # Tensão do terceiro ponto em volts
+    ## @var i3
+    # Corrente do terceiro ponto em aperes
+    ## @var v4
+    # Tensão do quarto ponto em volts
+    ## @var i4
+    # Corrente do quarto ponto em aperes
+    
     ## @brief Define as posições dos nós do resistor não linear nas matrizes do sistema
     # @param posicoes Lista das posições dos nós nas matrizes do sistema
     # @details Utilizado para calcular corretamente as contribuições do resistor não linear para as matrizes.
@@ -465,7 +491,7 @@ class ResistorNaoLinear(Componente):
 # @details A fonte de tensão controlada por tensão é um componente linear que
 # gera uma tensão de saída proporcional à tensão de entrada. A relação é:
 # V_out = A * V_in, onde A é o ganho de tensão.
-# @image html vcvs_stamp.png "Estampa da Fonte de Tensão Controlada por Tensão"
+# @image html fonte_tensao_tensao.png "Estampa da Fonte de Tensão Controlada por Tensão"
 class FonteTensaoTensao(Componente):
     _linear = True
     _num_nos = 4
@@ -479,6 +505,8 @@ class FonteTensaoTensao(Componente):
     def __init__(self, name: str, nos: list[str], valor: float):
         super().__init__(name, nos)
         self.valor = valor
+    ## @var valor
+    # Ganho de tensão
 
     ## @brief Retorna representação da fonte como linha da netlist
     # @return String no formato "E<nome> <nó_a> <nó_b> <nó_c> <nó_d> <ganho>"
@@ -514,6 +542,7 @@ class FonteTensaoTensao(Componente):
 # @details A fonte de corrente controlada por corrente é um componente
 # linear que define a corrente de saída como proporcional a uma corrente de controle:
 # I_out = F * I_in.
+# @image html fonte_corrente_corrente.png "Estampa da Fonte de Corrente Controlada por Corrente"
 class FonteCorrenteCorrente(Componente):
     _linear = True
     _num_nos = 4
@@ -527,6 +556,9 @@ class FonteCorrenteCorrente(Componente):
     def __init__(self, name: str, nos: list[str], valor: float):
         super().__init__(name, nos)
         self.valor = valor
+
+    ## @var valor
+    #  Ganho de corrente
 
     ## @brief Retorna representação da fonte como linha da netlist
     # @return String no formato "F<nome> <nó_a> <nó_b> <nó_c> <nó_d> <ganho>"
@@ -561,6 +593,7 @@ class FonteCorrenteCorrente(Componente):
 ## @brief Representa uma fonte de corrente controlada por tensão no circuito.
 # @details A fonte de corrente controlada por tensão é um componente linear
 # que obedece à relação de transcondutância: I = G * V.
+# @image html fonte_corrente_tensao.png "Estampa da Fonte de Corrente Controlada por Tensão"
 class FonteCorrenteTensao(Componente):
     _linear = True
     _num_nos = 4
@@ -574,6 +607,9 @@ class FonteCorrenteTensao(Componente):
     def __init__(self, name: str, nos: list[str], valor: float):
         super().__init__(name, nos)
         self.valor = valor
+
+    ## @var valor
+    # Transcondutância em Siemens
 
     ## @brief Retorna representação da fonte como linha da netlist
     # @return String no formato "G<nome> <nó_a> <nó_b> <nó_c> <nó_b> <ganho>"
@@ -605,13 +641,11 @@ class FonteCorrenteTensao(Componente):
 # @details A fonte de tensão controlada por corrente é um componente linear que
 # gera uma tensão de saída proporcional à corrente de entrada. A relação é:
 # V_out = A * I_in, onde A é o ganho de tensão.
+# @image html fonte_tensao_corrente.png "Estampa da Fonte de Tensão Controlada por Corrente"
 class FonteTensaoCorrente(Componente):
     _linear = True
     _num_nos = 4
     _num_nos_mod = 2
-
-
-
 
     ## @brief Construtor da Fonte de tensão controlada por corrente
     # @param name Nome único da fonte
@@ -621,6 +655,8 @@ class FonteTensaoCorrente(Componente):
     def __init__(self, name: str, nos: list[str], valor: float):
         super().__init__(name, nos)
         self.valor = valor
+    ## @var valor
+    # Transresistência em Ohms
 
     ## @brief Retorna representação da fonte como linha da netlist
     # @return String no formato "H<nome> <nó_a> <nó_b> <nó_c> <nó_d> <ganho>"
@@ -659,6 +695,7 @@ class FonteTensaoCorrente(Componente):
 ## @brief Representa um diodo no circuito
 # @details O diodo é um componente não linear que obedece a relação:
 # I_out = I_in * (exp(V/Vt) -1).
+# @image html diodo.png "Característica do Diodo"
 class Diodo(Componente): 
     _linear = False
     _num_nos = 2
@@ -667,7 +704,6 @@ class Diodo(Componente):
     ## @brief Construtor do Diodo
     # @param name Nome único do diodo
     # @param nos [nó_a, nó_b] nós do diodo
-    # @param valor Corrente de saturação em Amperes
     # @details O diodo conecta dois nós permitindo o fluxo de corrente preferencialmente
     # do ânodo para o cátodo.
     def __init__(self, name: str, nos: list[str]):
@@ -726,6 +762,7 @@ class Diodo(Componente):
 # @details O amplificador operacional é um componente linear que
 # gera uma tensão de saída proporcional à tensão diferencial de entrada. A relação é:
 # V_out = A * (V+ - V-), onde A é o ganho de tensão.
+# @image html amp_op.png "Estampa Amplificador Operacional"
 class AmpOp(Componente):
     _linear = True
     _num_nos = 3
@@ -770,6 +807,7 @@ class AmpOp(Componente):
 # @details O MOSFET é um componente não linear que gera uma corrente de dreno com relação de: Id = K * (Vgs - Vth)^2
 # @brief Transistor MOSFET (nível 1).
 # @details Componente não linear de 3 terminais (Dreno, Porta, Fonte). Seu comportamento é dividido em três regiões: corte, triodo e saturação. A estampa é baseada no modelo companheiro do componente, que consiste em uma fonte de corrente controlada por tensão (Gm*Vgs), uma condutância de saída (Gds) e uma fonte de corrente equivalente (Ieq) para linearizar o comportamento em torno do ponto de operação atual.  
+# @image html mosfet.png "Característica do MOSFET"
 class Mosfet(Componente):
     _num_nos = 3  # Dreno, Porta, Fonte
     _num_nos_mod = 0
@@ -797,6 +835,19 @@ class Mosfet(Componente):
         self.transcondutancia = FonteCorrenteTensao(name, [nos[0], nos[2], nos[1], nos[2]], 0.0)
         self.fonte = FonteCorrente(name, [nos[0], nos[2]], ['DC', 0.0])
         self.condutancia = Resistor(name, [nos[0], nos[2]], 1000)
+
+    ## @var tipo
+    # Tipo do MOSFET: 'N' ou 'P'
+    ## @var
+    # W parâmetro W do MOSFET.
+    ## @var
+    # L parâmetro L do MOSFET.
+    ## @var
+    # lbda parâmetro lambda do MOSFET.
+    ## @var
+    # K parâmetro K do MOSFET.
+    ## @var Vth
+    # parâmetro Vth (tensão) do MOSFET.
 
     ## @brief Define as posições dos nós do MOSFET nas matrizes do sistema
     # @param posicoes Lista das posições dos nós nas matrizes do sistema
@@ -911,6 +962,7 @@ class Mosfet(Componente):
 
 ## @brief Representa uma fonte de corrente no circuito
 # @details A fonte de corrente é um componente que gera uma corrente constante.
+# @image html fonte_corrente.png "Estampa da Fonte de Corrente"
 class FonteCorrente(Componente):
     _linear = True
     _num_nos = 2
@@ -919,7 +971,7 @@ class FonteCorrente(Componente):
     ## @brief Construtor da Fonte de corrente
     # @param name Nome único da fonte
     # @param nos Lista com dois nós: [nó_a, nó_b]
-    # @param valor Corrente em Amperes
+    # @param args Parâmetros em formato netlist
     # @details A fonte injeta uma corrente constante fluindo do nó a para o nó b.
     def __init__(self, name: str, nos: list[str], args: list):
         '''!
@@ -928,6 +980,13 @@ class FonteCorrente(Componente):
         super().__init__(name, nos)
         self.processa_argumentos_fonte(args)
         self.args = args
+
+    ## @var args
+    # Parâmetros em formato netlist
+    # @details Para fontes, temos três possibilidades para args:
+    # - DC <valor> : Fonte DC de <valor> amperes
+    # - SIN <valor-dc> <amplitude> <frequência> <atraso> <amortecimento> <defasagem> <ciclos> : Fonte senoidal
+    # - PULSE <amplitude-1> <amplitude-2> <atraso> <tempo-subida <tempo-descida> <tempo-ligado> <período> <ciclos> : Fonte pulsada
 
     ## @brief Retorna representação da fonte de corrente como linha da netlist
     # @return String no formato "I<nome> <nó_a> <nó_b> <args>"
@@ -953,6 +1012,7 @@ class FonteCorrente(Componente):
 
 ## @brief Representa uma fonte de tensão no circuito
 # @details A fonte de tensão é um componente que gera uma tensão constante.
+# @image html fonte_tensao.png "Estampa da Fonte de Tensão"
 class FonteTensao(Componente):
     _linear = True
     _num_nos = 2
@@ -967,6 +1027,13 @@ class FonteTensao(Componente):
         super().__init__(name, nos)
         self.processa_argumentos_fonte(args)
         self.args = args
+
+    ## @var args
+    # Parâmetros em formato netlist
+    # @details Para fontes, temos três possibilidades para args:
+    # - DC <valor> : Fonte DC de <valor> amperes
+    # - SIN <valor-dc> <amplitude> <frequência> <atraso> <amortecimento> <defasagem> <ciclos> : Fonte senoidal
+    # - PULSE <amplitude-1> <amplitude-2> <atraso> <tempo-subida <tempo-descida> <tempo-ligado> <período> <ciclos> : Fonte pulsada
 
     ## @brief Retorna representação da fonte de corrente como linha da netlist
     # @return String no formato "V<nome> <nó_a> <nó_b> <args>"
