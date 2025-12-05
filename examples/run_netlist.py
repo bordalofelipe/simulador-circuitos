@@ -79,10 +79,6 @@ print(f"Arquivo: {filename} -> Plotando nós: {nos_para_plotar}")
 # Plota os nós selecionados
 resultado.plot_xt(nos_para_plotar)
 
-
-print(f"Plotando apenas os nós de tensão: {nos_para_plotar}")
-resultado.plot_xt(nos_para_plotar)
-
 plt.title(f"Simulação via Netlist: {os.path.basename(netlist_path)}")
 plt.grid(True)
 plt.show()
