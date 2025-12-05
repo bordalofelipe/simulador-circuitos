@@ -2,8 +2,13 @@ import simulador
 import matplotlib.pyplot as plt
 import os
 
+## @package run_netlist
 # Exemplo de uso do simulador
 # Leitura e simulacao a partir de arquivo Netlist
+## @brief Importa um circuito a partir de um arquivo netlist
+## @param filename Variável que representa o nome do arquivo netlist a ser importado
+## @return Objeto Circuito com os componentes e parâmetros de simulação carregados do arquivo
+## @details Utilizado para importar um arquivo netlist no formato SPICE e criar um objeto Circuito com todos os componentes e parâmetros de simulação especificados no arquivo. Suporta todos os tipos de componentes definidos no simulador.
 
 # Define o caminho do arquivo .net (está na pasta 'tests' um nível acima)
 netlist_path = os.path.join('tests', 'opamp_rectifier.net')
