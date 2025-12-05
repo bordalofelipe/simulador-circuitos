@@ -26,7 +26,7 @@ class Componente():
     # @param name Nome único do componente no circuito
     # @param nos Lista de nós conectados ao componente
     # @exception AssertionError Se o número de nós não corresponder ao esperado
-    # @details Inicializa um componente com nome e nós específicos. Verifica se o número de nós fornecido corresponde ao número esperado para este tipo de componente.    
+    # @details Inicializa um componente com nome e nós específicos. Verifica se o número de nós fornecido corresponde ao número esperado para este tipo de componente.
     def __init__(self, name: str, nos: list[str]):
         self._nos_mod = []
         assert len(nos) == self._num_nos
@@ -212,7 +212,7 @@ class Resistor(Componente):
     _linear = True
     _num_nos = 2
     _num_nos_mod = 0
-    
+
     ## @brief Construtor do resistor
     # @param name Nome único do resistor
     # @param nos Lista com dois nós: [nó_a, nó_b]
@@ -356,7 +356,6 @@ class Capacitor(Componente):
         else:
             return 'C' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + str(self.valor) + ' IC=' + str(self.ic)
 
-
     ## @brief Atualiza o valor da tensão no capacitor
     # @param tensoes Lista de tensões nodais no tempo atual
     # @details Utilizado para atualizar o valor da tensão no capacitor baseado nas tensões nodais fora do método de iteração de Newton-Raphson.
@@ -390,8 +389,6 @@ class Capacitor(Componente):
             I[no_a] += condutancia*vab
             I[no_b] -= condutancia*vab
         return Gn, I
-
-
 
 
 ## @brief Representa um resistor não linear com característica de 3 segmentos no circuito
@@ -442,7 +439,7 @@ class ResistorNaoLinear(Componente):
     # Tensão do quarto ponto em volts
     ## @var i4
     # Corrente do quarto ponto em aperes
-    
+
     ## @brief Define as posições dos nós do resistor não linear nas matrizes do sistema
     # @param posicoes Lista das posições dos nós nas matrizes do sistema
     # @details Utilizado para calcular corretamente as contribuições do resistor não linear para as matrizes.
@@ -696,7 +693,7 @@ class FonteTensaoCorrente(Componente):
 # @details O diodo é um componente não linear que obedece a relação:
 # I_out = I_in * (exp(V/Vt) -1).
 # @image html diodo.png "Característica do Diodo"
-class Diodo(Componente): 
+class Diodo(Componente):
     _linear = False
     _num_nos = 2
     _num_nos_mod = 0
@@ -806,7 +803,7 @@ class AmpOp(Componente):
 ## @brief Representa um MOSFET no circuito
 # @details O MOSFET é um componente não linear que gera uma corrente de dreno com relação de: Id = K * (Vgs - Vth)^2
 # @brief Transistor MOSFET (nível 1).
-# @details Componente não linear de 3 terminais (Dreno, Porta, Fonte). Seu comportamento é dividido em três regiões: corte, triodo e saturação. A estampa é baseada no modelo companheiro do componente, que consiste em uma fonte de corrente controlada por tensão (Gm*Vgs), uma condutância de saída (Gds) e uma fonte de corrente equivalente (Ieq) para linearizar o comportamento em torno do ponto de operação atual.  
+# @details Componente não linear de 3 terminais (Dreno, Porta, Fonte). Seu comportamento é dividido em três regiões: corte, triodo e saturação. A estampa é baseada no modelo companheiro do componente, que consiste em uma fonte de corrente controlada por tensão (Gm*Vgs), uma condutância de saída (Gds) e uma fonte de corrente equivalente (Ieq) para linearizar o comportamento em torno do ponto de operação atual.
 # @image html mosfet.png "Característica do MOSFET"
 class Mosfet(Componente):
     _num_nos = 3  # Dreno, Porta, Fonte
@@ -974,9 +971,6 @@ class FonteCorrente(Componente):
     # @param args Parâmetros em formato netlist
     # @details A fonte injeta uma corrente constante fluindo do nó a para o nó b.
     def __init__(self, name: str, nos: list[str], args: list):
-        '''!
-        
-        '''
         super().__init__(name, nos)
         self.processa_argumentos_fonte(args)
         self.args = args
@@ -1009,6 +1003,7 @@ class FonteCorrente(Componente):
         I[no_a] -= corrente
         I[no_b] += corrente
         return Gn, I
+
 
 ## @brief Representa uma fonte de tensão no circuito
 # @details A fonte de tensão é um componente que gera uma tensão constante.

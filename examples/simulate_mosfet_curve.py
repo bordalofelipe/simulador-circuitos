@@ -19,7 +19,7 @@ resultado.export('mosfet_curve.sim')  # Exporta a simulação
 # g = nó 2
 # s = nó 3
 
-vgs = [vg[0] - vs[0] for vg, vs in zip(resultado.tensoes('2'), resultado.tensoes('3'))] 
+vgs = [vg[0] - vs[0] for vg, vs in zip(resultado.tensoes('2'), resultado.tensoes('3'))]
 vds = [vd[0] - vs[0] for vd, vs in zip(resultado.tensoes('1'), resultado.tensoes('3'))]
 
 plt.plot(vds, [-i[0]*1000 for i in resultado.tensoes(resultado.nos[-2])])

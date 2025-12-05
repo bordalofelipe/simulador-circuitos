@@ -35,10 +35,10 @@ class Circuito():
     # @param index Índice do componente na lista de componentes
     # @param componente Componente a ser definido
     # @details Define um componente na lista de componentes do circuito.
-    def __setitem__(self, index, componente): 
+    def __setitem__(self, index, componente):
         if (isinstance(componente, Componente)):
             self.__componentes[index] = componente
-            
+
     ## @brief Obtém um componente do circuito
     # @param index Índice do componente na lista de componentes
     # @return Componente na posição index
@@ -74,7 +74,7 @@ class Circuito():
     ## @brief Remove um componente do circuito através de seu valor
     # @param componente Variável que representa o componente a ser removido do circuito
     # @details Utilizado para remover um componente da lista de componentes do circuito, eliminando a primeira ocorrência do componente na lista.
-    def remove(self, componente): 
+    def remove(self, componente):
         return self.__componentes.remove(componente)
 
     ## @brief Remove um componente do circuito através de seu índice
@@ -128,7 +128,7 @@ class Circuito():
         # --- Parâmetros da Análise no Tempo ---
         ## Número máximo de iterações de Newton-Raphson
         N_MAX = 20
-        ## Número máximo de tentativas aleatórias antes de considerar o circuito impossível de ser solucionado  
+        ## Número máximo de tentativas aleatórias antes de considerar o circuito impossível de ser solucionado
         M_MAX = 100
         ## Fator de divisão do passo de integração
         STEP_FACTOR = 1e9
@@ -227,6 +227,7 @@ class Circuito():
             for com in self.__componentes:
                 f.write(str(com) + '\n')
             f.write(self.simulacao + ' ' + str(self.tempo_total) + ' ' + str(self.passo) + ' ' + self.tipo_simulacao + ' ' + str(self.passo_interno))
+
 
 ## @brief Importa um circuito a partir de um arquivo netlist
 # @param filename Nome do arquivo netlist a ser importado
@@ -341,7 +342,6 @@ class Resultado():
                 filtrado.append(node_filtrado)
             return filtrado
 
-
     ## @brief Fazer gráfico das tensões nodais no tempo
     # @param nos Nó ou lista de nós para colocar no gráfico. Por padrão, plota as tensões de todos os nós
     # @returns Objeto de gráfico do Matplotlib
@@ -410,7 +410,7 @@ class Resultado():
         assert len(resultado) == len(self.__nos)
         self.__t.append(t)
         self.__resultado.append(resultado)
-    
+
     ## @brief Remove um instante de tempo
     # @param t Variável que representa o instante de tempo a ser removido do circuito
     # @details Utilizado para remover um instante de tempo, eliminando a primeira ocorrência e suas respectivas tensões nodais.

@@ -17,4 +17,3 @@ circuito.append(simulador.FonteTensao('4000', ['1', simulador.GND], ['SIN', 1, 5
 circuito.append(simulador.Resistor('1000', ['1', '2'], 1000.0))  # Cria um resistor entre os nós 1 e 2
 circuito.append(simulador.Resistor('1001', ['2', simulador.GND], 1000.0))  # Cria um resistor entre os nós 2 e GND (terra)
 circuito.export('my_first_netlist.net')  # Exporta o circuito para uma netlist
-
