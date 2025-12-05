@@ -438,11 +438,27 @@ class Resultado():
                 f.write('\n')
         return self.__resultado
 
+    ## @brief Retorna um array NumPy com a coluna de tempo seguida pelas tensões nodais.
+    # @details Formato: shape = (n_instantes, 1 + n_nos) -> [t, v_no1, v_no2, ...]
+    # @return numpy.array com primeira coluna sendo o tempo e colunas subsequentes como tensões nodais.
     def to_numpy(self):
-        return False
+        t = np.array(self.__t, dtype=float)
+        if len(self.__resultado) == 0:
+            # retorna array vazio com colunas (tempo + nós)
+            return np.empty((0, len(self.__nos) + 1), dtype=float)
+        data = np.array(self.__resultado, dtype=float)
+        return np.hstack((t.reshape(-1, 1), data))
 
+    ## @brief Retorna um DataFrame do pandas com a coluna de tempo seguida pelas tensões nodais.
+    # @details Formato: colunas = ['t', no1, no2, ...], cada linha é um instante de tempo.
+    # @return pandas.DataFrame com os dados da simulação.
     def to_pandas(self):
-        return False
+        import pandas as pd
+        cols = ['t'] + self.__nos
+        arr = self.to_numpy()
+        df = pd.DataFrame(arr, columns=cols)
+        df.set_index('t', drop=True, inplace=True)  # define tempo como indice
+        return df
 
 
 ## @brief Importa resultados de simulação a partir de um arquivo
