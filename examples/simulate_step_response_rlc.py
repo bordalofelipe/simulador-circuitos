@@ -1,7 +1,14 @@
 import simulador
 
+## @package simulate_step_response_rlc
 # Exemplo de uso do simulador
 # Simulacao de resposta ao degrau em circuito RLC atraves da interface programatica
+## @brief Configura um circuito com um circuito RLC e simula a resposta ao degrau
+## @param tempo_total Variável que representa o tempo total de simulação em segundos
+## @param passo Variável que representa o tamanho do passo de integração em segundos. O passo de integração é o intervalo de tempo entre dois instantes de tempo consecutivos.
+## @param tipo_simulacao Variável que representa o tipo de método de integração: 'BE' (Backward Euler), 'FE' (Forward Euler) ou 'TRAP' (Trapezoidal).
+## @param passo_interno Variável que representa o número de passos internos por passo principal. O passo interno é o intervalo de tempo entre dois instantes de tempo consecutivos dentro de um passo principal.
+## @details Utilizado para configurar um circuito com um circuito RLC e simular a resposta ao degrau.
 
 circuito = simulador.Circuito('.TRAN', 0.005, 1e-06, 'BE', 1)  # Cria um objeto circuito com simulação transiente de 5ms e passo de 1us
 
