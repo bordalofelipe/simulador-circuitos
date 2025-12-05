@@ -1,8 +1,15 @@
 import simulador
 import matplotlib.pyplot as plt
 
+## @package simulate_diode
 # Exemplo de uso do simulador
 # Simulacao de retificador de meia onda com componente nao-linear (Diodo)
+## @brief Configura um circuito com um retificador de meia onda com um diodo
+## @param tempo_total Variável que representa o tempo total de simulação em segundos
+## @param passo Variável que representa o tamanho do passo de integração em segundos. O passo de integração é o intervalo de tempo entre dois instantes de tempo consecutivos.
+## @param tipo_simulacao Variável que representa o tipo de método de integração: 'BE' (Backward Euler), 'FE' (Forward Euler) ou 'TRAP' (Trapezoidal).
+## @param passo_interno Variável que representa o número de passos internos por passo principal. O passo interno é o intervalo de tempo entre dois instantes de tempo consecutivos dentro de um passo principal.
+## @details Utilizado para configurar um circuito com um retificador de meia onda com um diodo e simular o circuito.
 
 circuito = simulador.Circuito('.TRAN', 0.02, 1e-05, 'BE', 1)  # Cria um objeto circuito com simulação transiente de 20ms
 

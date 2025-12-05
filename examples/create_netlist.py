@@ -1,6 +1,6 @@
 import simulador
 
-## @package simulate_netlist
+## @package create_netlist
 # Exemplo de uso do simulador
 # Criacao de netlist atraves da interface programática
 

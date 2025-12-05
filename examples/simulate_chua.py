@@ -1,8 +1,15 @@
 import simulador
 import matplotlib.pyplot as plt
 
-# Exemplo baseado na Netlist fornecida pelo usuário
-# Objetivo: Simular circuito não-linear com IC=1V nos capacitores
+## @package simulate_chua
+# Exemplo de uso do simulador
+# Simulacao de circuito não-linear com IC=1V nos capacitores atraves da interface programatica
+## @brief Configura um circuito com um circuito não-linear com IC=1V nos capacitores
+## @param tempo_total Variável que representa o tempo total de simulação em segundos
+## @param passo Variável que representa o tamanho do passo de integração em segundos. O passo de integração é o intervalo de tempo entre dois instantes de tempo consecutivos.
+## @param tipo_simulacao Variável que representa o tipo de método de integração: 'BE' (Backward Euler), 'FE' (Forward Euler) ou 'TRAP' (Trapezoidal).
+## @param passo_interno Variável que representa o número de passos internos por passo principal. O passo interno é o intervalo de tempo entre dois instantes de tempo consecutivos dentro de um passo principal.
+## @details Utilizado para configurar um circuito com um circuito não-linear com IC=1V nos capacitores e simular o circuito.
 
 # Configura simulação: 1000s de tempo total, passo de 0.1s
 # .TRAN 1000 0.1 BE 1
