@@ -63,7 +63,7 @@ elif 'dc_source' in filename:
 
 elif 'opamp_rectifier' in filename:
     # Teste 6: retificador onda completa
-    nos_para_plotar = ['1', '4']
+    nos_para_plotar = ['7', '1']
 
 elif 'oscilator' in filename:
     # Teste 7: oscilador
