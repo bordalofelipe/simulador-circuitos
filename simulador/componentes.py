@@ -1017,7 +1017,7 @@ class FonteTensao(Componente):
     ## @brief Construtor da Fonte de tensão
     # @param name Nome único da fonte
     # @param nos Lista com dois nós: [nó_a, nó_b]
-    # @param valor Tensão em Volts
+    # @param args Parâmetros em formato netlist
     # @details A fonte fixa uma diferença de potencial constante entre os nós (Va - Vb = valor).
     def __init__(self, name: str, nos: list[str], args: list):
         super().__init__(name, nos)
