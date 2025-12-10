@@ -972,7 +972,7 @@ class FonteCorrente(Componente):
     # @details A fonte injeta uma corrente constante fluindo do nó a para o nó b.
     def __init__(self, name: str, nos: list[str], args: list):
         super().__init__(name, nos)
-        args = [str(arg) for arg in self.args] # forca args como strings
+        args = [str(arg) for arg in args] # forca args como strings
         self.processa_argumentos_fonte(args)
         self.args = args
 
@@ -1021,7 +1021,7 @@ class FonteTensao(Componente):
     # @details A fonte fixa uma diferença de potencial constante entre os nós (Va - Vb = valor).
     def __init__(self, name: str, nos: list[str], args: list):
         super().__init__(name, nos)
-        args = [str(arg) for arg in self.args] # forca args como strings
+        args = [str(arg) for arg in args] # forca args como strings
         self.processa_argumentos_fonte(args)
         self.args = args
 
