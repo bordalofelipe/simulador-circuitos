@@ -989,7 +989,7 @@ class FonteCorrente(Componente):
     # - SIN <valor-dc> <amplitude> <frequência> <atraso> <amortecimento> <defasagem> <ciclos> : Fonte senoidal
     # - PULSE <amplitude-1> <amplitude-2> <atraso> <tempo-subida <tempo-descida> <tempo-ligado> <período> <ciclos> : Fonte pulsada
     def __str__(self):
-        return 'I' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + ' '.join(self.args)
+        return 'I' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + ' '.join(str(arg) for arg in self.args)
 
     ## @brief Retorna representação da fonte de corrente como linha da netlist
     # @return String no formato "I<nome> <nó_a> <nó_b> <valor>"
@@ -1037,7 +1037,7 @@ class FonteTensao(Componente):
     # - SIN <valor-dc> <amplitude> <frequência> <atraso> <amortecimento> <defasagem> <ciclos> : Fonte senoidal
     # - PULSE <amplitude-1> <amplitude-2> <atraso> <tempo-subida <tempo-descida> <tempo-ligado> <período> <ciclos> : Fonte pulsada
     def __str__(self):
-        return 'V' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + ' '.join(self.args)
+        return 'V' + self.name + ' ' + ' '.join(str(no) for no in self.nos) + ' ' + ' '.join(str(arg) for arg in self.args)
 
     ## @brief Retorna representação da fonte de tensão como linha da netlist
     # @return String no formato "V<nome> <nó_a> <nó_b> <valor>"
